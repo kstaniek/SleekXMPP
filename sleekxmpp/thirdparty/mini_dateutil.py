@@ -225,9 +225,9 @@ except:
 
         h, min, s, us = None, None, None, 0
         frac = 0
-        if m.group('tzempty') == None and m.group('tzh') == None:
-            raise ValueError("Not a proper ISO 8601 timestamp: " +
-                    "missing timezone (Z or +hh[:mm])!")
+        #if m.group('tzempty') == None and m.group('tzh') == None:
+        #    raise ValueError("Not a proper ISO 8601 timestamp: " +
+        #            "missing timezone (Z or +hh[:mm])!")
 
         if m.group('frac'):
             frac = m.group('frac')

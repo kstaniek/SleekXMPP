@@ -8,5 +8,6 @@
     Author: Klaudiusz Staniek (kstaniek@gmail.com)
 """
 
-from sleekxmpp.plugins.xep_0326.stanza.get_capabilities import *
-from sleekxmpp.plugins.xep_0326.stanza.get_all_data_sources import *
+from sleekxmpp.plugins.xep_0326.stanza.base import *
+from sleekxmpp.plugins.xep_0326.stanza.data_sources import *
+from sleekxmpp.plugins.xep_0326.stanza.capabilities import *

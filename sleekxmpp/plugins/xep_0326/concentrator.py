@@ -37,5 +37,14 @@ class XEP_0326(BasePlugin):
 
     def plugin_init(self):
         pass
+        
+    def session_bind(self, jid):
+        self.xmpp['xep_0030'].add_feature(feature=xep_0326_namespace)
+        
+        
+    def plugin_end(self):
+        self.xmpp['xep_0030'].del_feature(feature=xep_0326_namespace)
+        #self.xmpp.remove_handler('Get Capabilities')
+        
 
     
