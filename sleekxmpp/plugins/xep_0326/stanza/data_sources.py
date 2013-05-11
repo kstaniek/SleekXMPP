@@ -14,8 +14,6 @@ from sleekxmpp.plugins import xep_0082   #for timestamp
 
 import datetime as dt
 
-from sleekxmpp.thirdparty import tzutc
-
 from sleekxmpp.plugins.xep_0326.stanza.base import response_codes, ConcentratorElemenBase
 
 
