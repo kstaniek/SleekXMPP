@@ -14,10 +14,12 @@ from sleekxmpp.plugins import xep_0082   #for timestamp
 
 import datetime as dt
 
-from sleekxmpp.plugins.xep_0326.stanza.base import response_codes, ConcentratorElemenBase
+from sleekxmpp.plugins.xep_0326.stanza.base import response_codes, \
+            ConcentratorBase, \
+            ConcentratorResponseBase
+            
 
-
-class GetAllDataSources(ConcentratorElemenBase):
+class GetAllDataSources(ConcentratorBase):
     
     """
     A stanza class for XML content of the form:
@@ -28,7 +30,7 @@ class GetAllDataSources(ConcentratorElemenBase):
     name = 'getAllDataSources'
     plugin_attrib = 'getAllDataSources'
 
-class GetRootDataSources(ConcentratorElemenBase):
+class GetRootDataSources(ConcentratorBase):
     
     """
     A stanza class for XML content of the form:
@@ -39,7 +41,7 @@ class GetRootDataSources(ConcentratorElemenBase):
     name = 'getRootDataSources'
     plugin_attrib = 'getRootDataSources'
 
-class GetChildDataSources(ConcentratorElemenBase):
+class GetChildDataSources(ConcentratorBase):
     
     """
     A stanza class for XML content of the form:
@@ -63,7 +65,7 @@ class GetChildDataSources(ConcentratorElemenBase):
         self._set_attr('lastChanged', xep_0082.format_datetime(lastChanged))
 
 
-class GetDataSourcesResponse(ConcentratorElemenBase):
+class GetDataSourcesResponse(ConcentratorResponseBase):
     """
     This is a stanza abstract class for all the DataSource response classes
     
@@ -81,22 +83,16 @@ class GetDataSourcesResponse(ConcentratorElemenBase):
         get_data_sources        -- Return all data source in tuple form.
     """
     
-    interfaces = set(['result','data_sources'])
+    interfaces = set(['data_sources'])
 
     # Cache items
     _data_sources = set()
         
     def setup(self, xml=None):
-        ElementBase.setup(self, xml)
-        self._set_attr('result', 'OK')
+        super().setup(xml)
         # for keeping information about the id's to avoid duplication
         self._data_sources = set([item[0:1] for item in self['data_sources']])
     
-    def set_result(self, value):
-        if value in response_codes:
-            self._set_attr('result', value)
-        else:
-            raise ValueError('Unknown response code: %s' % value)
                 
     def add_data_source(self, id, name, hasChildren=False, lastChanged=None):
         if id not in self._data_sources:
@@ -169,9 +165,8 @@ class GetChildDataSourcesResponse(GetDataSourcesResponse):
     plugin_attrib = 'getChildDataSourcesResponse'
       
 
-class DataSource(ConcentratorElemenBase):
+class DataSource(ConcentratorBase):
     name = 'dataSource'
-    namespace = 'urn:xmpp:iot:concentrators'
     plugin_attrib = 'data_source'
     plugin_multi_attrib = 'data_sources'
     interfaces = set(['id','name','hasChildren','lastChanged']) 
@@ -207,7 +202,7 @@ register_stanza_plugin(GetRootDataSourcesResponse, DataSource, iterable=True)
 register_stanza_plugin(GetChildDataSourcesResponse, DataSource, iterable=True)
 
 
-class Subscribe(ConcentratorElemenBase):
+class Subscribe(ConcentratorBase):
     
     """
     A stanza class for XML content of the form:
@@ -228,13 +223,7 @@ class Subscribe(ConcentratorElemenBase):
     events = set(['parameters', 'messages', \
             'nodeAdded', 'nodeUpdated', 'nodeStatusChanged', 'nodeRemoved', \
             'nodeMovedUp', 'nodeMovedDown'])
-            
-    def get_sourceid(self):
-        return self._get_attr('sourceId')
-    
-    def set_sourceid(self, value):
-        return self._set_attr('sourceId', value)
-    
+                
     def get_geteventssince(self):
         """ Return None if attrib not exists """
         return self._get_attr('getEventsSince', None)
@@ -251,7 +240,7 @@ class Subscribe(ConcentratorElemenBase):
             value = self._get_attr(attrib, 'true')
             return value.lower() in ('1', 'true')
         
-        super(Subscribe, self).__getitem__(attrib)
+        super().__getitem__(attrib)
         #ConcentratorElemenBase.__getitem__(self, attrib)
     
     def __setitem__(self, attrib, value):
@@ -265,7 +254,7 @@ class Subscribe(ConcentratorElemenBase):
                 self._set_attr(attrib, 'false')
             return
             
-        ConcentratorElemenBase.__setitem__(self, attrib, value)
+        super().__setitem__(attrib, value)
         
     
     def get_events(self):
@@ -280,7 +269,7 @@ class Subscribe(ConcentratorElemenBase):
         
    
 
-class SubscribeResponse(ConcentratorElemenBase):
+class SubscribeResponse(ConcentratorResponseBase):
     
     """
     A stanza class for XML content of the form:
@@ -312,7 +301,7 @@ class Unsubscribe(Subscribe):
     name = 'unsubscribe'
     plugin_attrib = 'unsubscribe'
 
-class UnsubscribeResponse(ConcentratorElemenBase):
+class UnsubscribeResponse(ConcentratorResponseBase):
     
     """
     A stanza class for XML content of the form:
@@ -425,6 +414,7 @@ if __name__ == '__main__':
     print(get['nodeMovedDown'])
     print("%s" % get)
     print("%s" % get.get_events())
+    print("%s" % get.interfaces)
     
     print('============Subscribe===================')
     
@@ -459,6 +449,14 @@ if __name__ == '__main__':
     print("%s" % get)
     print("%s" % get.get_events())
     
+    print('============SubscribeResponse===================')
+    
+    resp = SubscribeResponse()
+    resp['result'] = 'NotImplemented'
+    print("%s" % resp)
+    
+    
+    
     print('============Unubscribe===================')
     
     resp = Unsubscribe()
@@ -469,6 +467,7 @@ if __name__ == '__main__':
     
     resp = UnsubscribeResponse()
     print("%s" % resp)
+    print("%s" % resp.interfaces)
     
     
     

@@ -17,7 +17,7 @@ response_codes = set(['OK', 'NotFound', 'InsufficientPrivileges', 'Locked', 'Not
 xep_0326_namespace = 'urn:xmpp:iot:concentrators'
 
 
-class ConcentratorElemenBase(ElementBase):
+class ConcentratorBase(ElementBase):
     
     """
     A base stanza class for all concentrator stanzas.
@@ -26,3 +26,24 @@ class ConcentratorElemenBase(ElementBase):
     """    
     namespace = xep_0326_namespace
     interfaces = set()
+    
+
+class ConcentratorResponseBase(ConcentratorBase):
+    
+    """
+    A base stanza class for all concentrator response stanzas.
+    
+    The result attribute is in every response stanza.
+    The default result is 'OK' and can be any keyword from the response_code set.
+    """  
+    
+    def setup(self, xml=None):
+        super().setup(xml)
+        self._set_attr('result', 'OK')
+        __class__.interfaces |= set(['result'])
+    
+    def set_result(self, value):
+        if value in response_codes:
+            self._set_attr('result', value)
+        else:
+            raise ValueError('Unknown response code: %s' % value)
