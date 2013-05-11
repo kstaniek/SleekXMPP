@@ -9,8 +9,6 @@
 """
 
 
-# TODO: 3.2.6 Get changes since given timestamp before subscribing
-
 from sleekxmpp.xmlstream import ElementBase, ET, register_stanza_plugin
 from sleekxmpp.plugins import xep_0082   #for timestamp
 
@@ -18,7 +16,7 @@ import datetime as dt
 
 from sleekxmpp.thirdparty import tzutc
 
-from base import response_codes, ConcentratorElemenBase
+from sleekxmpp.plugins.xep_0326.stanza.base import response_codes, ConcentratorElemenBase
 
 
 class GetAllDataSources(ConcentratorElemenBase):
@@ -118,7 +116,6 @@ class GetDataSourcesResponse(ConcentratorElemenBase):
         """ Return all data sources """
         data_sources = set()
         for data_source in self['substanzas']:
-            print data_source
             if isinstance(data_source, DataSource):
                 data_sources.add((data_source['id'], 
                                 data_source['name'],
@@ -226,7 +223,7 @@ class Subscribe(ConcentratorElemenBase):
     
     name = 'subscribe'
     plugin_attrib = 'subscribe'
-    interfaces = set(['sourceId', 'parameters', 'messages', \
+    interfaces = set(['sourceId', 'getEventsSince', 'parameters', 'messages', \
             'nodeAdded', 'nodeUpdated', 'nodeStatusChanged', 'nodeRemoved', \
             'nodeMovedUp', 'nodeMovedDown'])
 
@@ -234,11 +231,22 @@ class Subscribe(ConcentratorElemenBase):
             'nodeAdded', 'nodeUpdated', 'nodeStatusChanged', 'nodeRemoved', \
             'nodeMovedUp', 'nodeMovedDown'])
             
-    def get_source_id(self):
+    def get_sourceid(self):
         return self._get_attr('sourceId')
     
-    def set_source_id(self, value):
+    def set_sourceid(self, value):
         return self._set_attr('sourceId', value)
+    
+    def get_geteventssince(self):
+        """ Return None if attrib not exists """
+        return self._get_attr('getEventsSince', None)
+            
+    def set_geteventssince(self, value):
+        new_value = value
+        if not isinstance(value, dt.datetime):
+            new_value = xep_0082.parse(value)
+
+        self._set_attr('getEventsSince', xep_0082.format_datetime(new_value))
     
     def __getitem__(self, attrib):
         if attrib in self.events:
@@ -323,7 +331,7 @@ class UnsubscribeResponse(ConcentratorElemenBase):
 
 if __name__ == '__main__':
 
-    print '=============DataSoruce================'
+    print('=============DataSoruce================')
     ds = DataSource()
     ds['id'] = 'devices'
     ds['name'] = 'All Z-wave devices'
@@ -351,12 +359,12 @@ if __name__ == '__main__':
     print("%s" % ds['lastChanged'])
     
     
-    print '============GetAllDataSources==================='
+    print('============GetAllDataSources===================')
     
     get = GetAllDataSources()
     print("%s" % get)
     
-    print '============GetAllDataSourcesResponse==================='
+    print('============GetAllDataSourcesResponse===================')
     
     
     resp = GetAllDataSourcesResponse()
@@ -369,12 +377,12 @@ if __name__ == '__main__':
     print("%s" % resp)
     print("%s" % resp.get_data_sources())
     
-    print '============GetRootDataSources==================='
+    print('============GetRootDataSources===================')
     
     get = GetRootDataSources()
     print("%s" % get)
     
-    print '============GetRootDataSourcesResponse==================='
+    print('============GetRootDataSourcesResponse===================')
     
     resp = GetRootDataSourcesResponse()
     resp.add_data_source('MeteringRoot', 'Metering', True, 
@@ -385,44 +393,42 @@ if __name__ == '__main__':
     print("%s" % resp)
     print("%s" % resp.get_data_sources())
     
-    print '============GetChildDataSources==================='
+    print('============GetChildDataSources===================')
     
     get = GetChildDataSources()
     get['sourceId'] = 'MeteringRoot'
     get['lastChanged'] = '2013-05-09T11:31:16.329121Z'
     print("%s" % get)
     
-    print '============GetChildDataSourcesResponse==================='
+    print('============GetChildDataSourcesResponse===================')
     
     resp = GetChildDataSourcesResponse()
     resp['lang'] = 'pl'
     resp.add_data_source('MeteringFieldImports', 'Field Imports', False, 
         '2013-05-09T11:31:16+02')    
         
-    a = dt.datetime.now()
-    print a
     resp.add_data_source('MeteringGroups', 'Groups', False, dt.datetime.now())
     
         
     print("%s" % resp)
     print("%s" % resp.get_data_sources())
     
-    print '============Subscribe==================='
+    print('============Subscribe===================')
     
     get = Subscribe()
-    print get['sourceId']
-    print get['parameters']
-    print get['messages']
-    print get['nodeAdded']
-    print get['nodeUpdated']
-    print get['nodeStatusChanged']
-    print get['nodeRemoved']
-    print get['nodeMovedUp']
-    print get['nodeMovedDown']
+    print(get['sourceId'])
+    print(get['parameters'])
+    print(get['messages'])
+    print(get['nodeAdded'])
+    print(get['nodeUpdated'])
+    print(get['nodeStatusChanged'])
+    print(get['nodeRemoved'])
+    print(get['nodeMovedUp'])
+    print(get['nodeMovedDown'])
     print("%s" % get)
     print("%s" % get.get_events())
     
-    print '============Subscribe==================='
+    print('============Subscribe===================')
     
     get['parameters'] = 'True'
     get['messages'] = False
@@ -434,11 +440,13 @@ if __name__ == '__main__':
     get['nodeMovedDown'] = False
     get['sourceId'] = 'MeteringGroups'
     
+    get['getEventsSince'] = '2013-05-09T11:31:16'
+    
     
     print("%s" % get)
     print("%s" % get.get_events())
     
-    print '============Subscribe==================='
+    print('============Subscribe===================')
     
     get['parameters'] = None
     get['messages'] = None
@@ -453,13 +461,13 @@ if __name__ == '__main__':
     print("%s" % get)
     print("%s" % get.get_events())
     
-    print '============Unubscribe==================='
+    print('============Unubscribe===================')
     
     resp = Unsubscribe()
     resp['sourceId'] = 'MeteringGroups'
     print("%s" % resp)
     
-    print '============UnubscribeResponse==================='
+    print('============UnubscribeResponse===================')
     
     resp = UnsubscribeResponse()
     print("%s" % resp)

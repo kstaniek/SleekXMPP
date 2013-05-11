@@ -11,10 +11,11 @@
 
 from sleekxmpp.xmlstream import ElementBase, ET, register_stanza_plugin
 
-from base import response_codes
+from sleekxmpp.plugins.xep_0326.stanza.base import response_codes, ConcentratorElemenBase
 
 
-class GetCapabilities(ElementBase):
+
+class GetCapabilities(ConcentratorElemenBase):
     
     """
     A stanza class for XML content of the form:
@@ -24,12 +25,10 @@ class GetCapabilities(ElementBase):
     """
     
     name = 'getCapabilities'
-    namespace = 'urn:xmpp:iot:concentrators'
     plugin_attrib = 'getCapabilities'
-    interfaces = set([])
 
 
-class GetCapabilitiesResponse(ElementBase):
+class GetCapabilitiesResponse(ConcentratorElemenBase):
     """ 
     <getCapabilitiesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
           <value>getCapabilities</value>
@@ -76,7 +75,6 @@ class GetCapabilitiesResponse(ElementBase):
     """
     
     name = 'getCapabilitiesResponse'
-    namespace = 'urn:xmpp:iot:concentrators'
     plugin_attrib = 'getCapabilitiesResponse'
     interfaces = set(['result','capabilities'])
     
@@ -106,9 +104,8 @@ class GetCapabilitiesResponse(ElementBase):
         return capabilities
 
 
-class Capability(ElementBase):
+class Capability(ConcentratorElemenBase):
     name = 'value'
-    namespace = 'urn:xmpp:iot:concentrators'
     plugin_attrib = 'capability'
     plugin_multi_attrib = 'capabilities'
     interfaces = set(['value'])
