@@ -18,10 +18,10 @@ def run_tests():
     """
     testfiles = ['tests.test_overall']
     exclude = ['__init__.py', 'test_overall.py']
-    for t in glob(pjoin('tests', '*.py')):
+    for t in glob(pjoin('tests/0326', '*.py')):
         if True not in [t.endswith(ex) for ex in exclude]:
             if basename(t).startswith('test_'):
-                testfiles.append('tests.%s' % splitext(basename(t))[0])
+                testfiles.append('tests.0326.%s' % splitext(basename(t))[0])
 
     suites = []
     for file in testfiles:

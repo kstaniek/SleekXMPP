@@ -19,7 +19,14 @@ from sleekxmpp.plugins.xep_0326.stanza.base import response_codes, \
             ConcentratorResponseBase
 
 
-class ContainsNode(ConcentratorBase):
+class NodeReference(ConcentratorBase):
+    name = 'node'
+    plugin_attrib = 'nodeReference'
+    plugin_multi_attrib = 'nodeReferences'
+    interfaces = set(['sourceId','nodeId','cacheType'])    
+
+
+class ContainsNode(NodeReference, ConcentratorBase):
     
     """
     This command permits the client to check the existence of a node in the concentrator
@@ -30,7 +37,7 @@ class ContainsNode(ConcentratorBase):
     """
     name = 'containsNode'
     plugin_attrib = 'containsNode'
-    interfaces = set(['sourceId','nodeId'])
+    #interfaces = set(['sourceId','nodeId'])
 
 class ContainsNodeResponse(ConcentratorResponseBase):
     
@@ -73,7 +80,7 @@ class ContainsNodes(ConcentratorBase):
     """
     name = 'containsNodes'
     plugin_attrib = 'containsNodes'
-    interfaces = set(['nodes'])
+    interfaces = set(['nodeReferences'])
     
     
     # Cache items
@@ -88,7 +95,7 @@ class ContainsNodes(ConcentratorBase):
     def add_node(self, sourceId, nodeId):
         if (sourceId, nodeId) not in self._nodes:
             self._nodes.add((sourceId, nodeId))
-            node = Node(parent=self)
+            node = NodeReference(parent=self)
             node['sourceId'] = sourceId
             node['nodeId'] = nodeId
             self.iterables.append(node)
@@ -99,20 +106,11 @@ class ContainsNodes(ConcentratorBase):
         """ Return all nodes """
         nodes = set()
         for node in self['substanzas']:
-            if isinstance(node, Node):
+            if isinstance(node, NodeReference):
                 nodes.add((node['sourceId'], 
                                 node['nodeId']))
         return nodes
         
-
-class Node(ConcentratorBase):
-    name = 'node'
-    plugin_attrib = 'node'
-    plugin_multi_attrib = 'nodes'
-    interfaces = set(['sourceId','nodeId']) 
-      
-register_stanza_plugin(ContainsNodes, Node, iterable=True)
-
 
 class ContainsNodesResponse(ConcentratorResponseBase):
     
@@ -185,7 +183,170 @@ class Value(ConcentratorBase):
         else:
             self.xml.text = 'false'
 
-register_stanza_plugin(ContainsNodesResponse, Value, iterable=True)
+
+class NodeInformation(ConcentratorBase):
+    name = 'node'
+    plugin_attrib = 'node'
+    plugin_multi_attrib = 'nodes'
+    interfaces = set(['id','displayName','nodeType','localId','logId','cacheType','state',
+                    'hasChildren','childrenOrdered','isReadable','isControllable',
+                    'hasCommands', 'parentId','parentCacheType', 'lastChanged'])
+    
+    bool_attribs = set(['hasChildren','isReadable','isControllable','hasCommands'])
+    
+    def __getitem__(self, attrib):
+        if attrib in self.bool_atribs:
+            value = self._get_attr(attrib, 'false')
+            return value.lower() in ('1', 'true')
+        
+        super().__getitem__(attrib)
+        #ConcentratorElemenBase.__getitem__(self, attrib)
+    
+    def __setitem__(self, attrib, value):
+        if attrib in self.bool_attribs:
+            del self[attrib]
+            if value is None:
+                return
+            elif value in (True, '1', 'true', 'True'):
+                self._set_attr(attrib, 'true')
+            else:
+                self._set_attr(attrib, 'false')
+            return
+            
+        super().__setitem__(attrib, value)
+       
+    def get_lastchanged(self):
+        """ Return None if attrib not exists """
+        return self._get_attr('lastChanged', None)
+            
+    def set_lastchanged(self, value):
+        lastChanged = value
+        if not isinstance(value, dt.datetime):
+            lastChanged = xep_0082.parse(value)
+
+        self._set_attr('lastChanged', xep_0082.format_datetime(lastChanged))
+
+
+
+class GetNode(NodeReference, ConcentratorBase):
+    
+    """
+    This command requests basic information about a node in the concentrator. 
+    
+    <getNode xmlns='urn:xmpp:iot:concentrators' sourceId='MeteringTopology' 
+        nodeId='Node1' xml:lang='en'/>
+    
+    """
+    name = 'getNode'
+    plugin_attrib = 'getNode'
+    #interfaces = set(['sourceId','nodeId'])
+
+
+class GetNodeResponse(NodeInformation, ConcentratorResponseBase):
+    """
+    This command returns basic information about a node in the concentrator. 
+    
+    <getNodeResponse xmlns='urn:xmpp:iot:concentrators' 
+                       result='OK'
+                       id='Node1' 
+                       nodeType='Namespace.NodeType1' 
+                       cacheType='Node' 
+                       state='WarningUnsigned' 
+                       hasChildren='false'
+                       isReadable='true' 
+                       isControllable='true' 
+                       hasCommands='true' 
+                       parentId='Root' 
+                       lastChanged='2013-03-19T17:58:01'/>
+    
+    """
+
+    name = 'getNodeResponse'
+    plugin_attrib = 'getNodeResponse'
+    
+     
+
+
+class GetNodes(ContainsNodes, ConcentratorBase):
+    
+    """
+    This command requests basic information about a multiple nodes in the concentrator. 
+    
+    <getNodes xmlns='urn:xmpp:iot:concentrators' xml:lang='en'>
+          <node sourceId='MeteringTopology' nodeId='Node1'/>
+          <node sourceId='MeteringTopology' nodeId='Node2'/>
+          <node sourceId='MeteringTopology' nodeId='Node3'/>
+      </getNodes>
+    
+    """
+    name = 'getNodes'
+    plugin_attrib = 'getNodes'
+
+    
+
+class GetNodesResponse(ConcentratorResponseBase):
+    """
+    This command returns basic information about multiple nodes in the concentrator. 
+    
+    <getNodesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+          <node id='Node1' nodeType='Namespace.NodeType1' cacheType='Node' state='WarningUnsigned' hasChildren='false' isReadable='true' 
+                isControllable='true' hasCommands='true' parentId='Root' lastChanged='2013-03-19T17:58:01'/>
+          <node id='Node2' nodeType='Namespace.NodeType2' cacheType='Node' state='None' hasChildren='false' isReadable='true' 
+                isControllable='true' hasCommands='true' parentId='Root' lastChanged='2013-03-19T17:58:01'/>
+          <node id='Node3' nodeType='Namespace.NodeType3' cacheType='Node' state='None' hasChildren='false' isReadable='true' 
+                isControllable='true' hasCommands='true' parentId='Root' lastChanged='2013-03-19T17:58:01'/>
+      </getNodesResponse>
+    
+    """
+
+    name = 'getNodeResponse'
+    plugin_attrib = 'getNodeResponse'
+    
+    # Cache items
+    _nodes = set()
+        
+    def setup(self, xml=None):
+        super().setup(xml)
+        # for keeping information about the id's to avoid duplication
+        self._nodes = set([item[0:2] for item in self['nodes']])
+    
+                
+    def add_node(self, id, nodeType, cacheType, state, hasChildren, isReadable,
+                isControllable, hasCommands, parentId, lastChanged):
+        if (id) not in self._nodes:
+            self._nodes.add(id)
+            node = NodeInformation(parent=self)
+            node['id'] = id
+            node['nodeType'] = nodeType
+            node['cacheType'] = cacheType
+            node['state'] = state
+            node['hasChildren'] = hasChildren
+            node['isReadable'] = isReadable
+            node['isControllable'] = isControllable
+            node['hasCommands'] = hasCommands
+            node['parendId'] = parentId
+            node['lastChanged'] = lastChanged
+            
+            self.iterables.append(node)
+            return True
+        return False
+      
+    def get_nodes(self):
+        """ Return all nodes """
+        nodes = set()
+        for node in self['substanzas']:
+            if isinstance(node, NodeReference):
+                nodes.add((node['id'], 
+                                node['nodeType']))
+        return nodes
+    
+     
+
+
+register_stanza_plugin(ContainsNodesResponse, Value, iterable=True)      
+register_stanza_plugin(ContainsNodes, NodeReference, iterable=True)
+
+
 
 
    
@@ -232,17 +393,66 @@ if __name__ == '__main__':
     print("%s" % stanza)
     print("%s" % stanza.get_values())
     
+    print("================== Node ================")
     
-    """
-    This command permits the client to check the existence of a node in the concentrator
+    stanza = NodeInformation()
+    stanza['id'] = 'Node1'
+    stanza['nodeType'] = 'Namespace.NodeType1'
+    stanza['cacheType'] = 'Node'
+    stanza['state'] = 'WarningUnsigned'
+    stanza['hasChildred'] = 'false'
+    stanza['isControllable'] = 'true'
+    stanza['hasCommands'] = 'true'
+    stanza['parentId'] = 'Root'
+    stanza['lastChanged'] = '2013-03-19T17:58:01'
+    print("%s" % stanza)
     
-    <containsNodes xmlns='urn:xmpp:iot:concentrators'>
-         <node sourceId='MeteringTopology' nodeId='Node1'/>
-         <node sourceId='MeteringTopology' nodeId='Node2'/>
-         <node sourceId='MeteringTopology' nodeId='Node3'/>
-         <node sourceId='MeteringGroups' nodeId='Group1'/>
-    </containsNodes>
+    print("================== GetNode ================")
     
-    """
+    stanza = GetNode()
+    stanza['sourceId'] = 'MeteringTopology'
+    stanza['nodeId'] = 'Node1'
+    stanza['lang'] = 'en'
+    print("%s" % stanza)
+   
+    
+    print("================== GetNodeResponse ================")
+    
+    stanza = GetNodeResponse()
+    stanza['id'] = 'Node1'
+    stanza['nodeType'] = 'Namespace.NodeType1'
+    stanza['cacheType'] = 'Node'
+    stanza['state'] = 'WarningUnsigned'
+    stanza['hasChildren'] = 'false'
+    stanza['isReadable'] = 'true'
+    stanza['isControllable'] = 'true'
+    stanza['hasCommands'] = 'true'
+    stanza['parentId'] = 'Root'
+    stanza['lastChanged'] = '2013-03-19T17:58:01'
+    print("%s" % stanza)
+    
+    
+    print("================== GetNodes ================")
+    
+    stanza = GetNodes()
+    stanza.add_node('MeteringTopology','Node1')
+    stanza.add_node('MeteringTopology','Node2')
+    print("%s" % stanza)
+   
+    
+    print("================== GetNodeResponse ================")
+    
+    stanza = GetNodesResponse()
+    stanza.add_node('Node1', 'Namespace.NodeType1', 'Node', 'WarningUnsigned',
+        False, True, True, True, 'Root', '2013-03-19T17:58:01')
+    stanza.add_node('Node2', 'Namespace.NodeType2', 'Node', 'WarningUnsigned',
+        False, True, True, True, 'Root', '2013-03-19T17:58:01')
+    a = "%s" % stanza
+    #print("%s" % stanza)
+    print("%s" % a.replace('><', '>\n<'))
+    
+    
+    
+    
     
     exit(1)

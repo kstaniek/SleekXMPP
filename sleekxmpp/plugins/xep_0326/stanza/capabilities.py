@@ -8,7 +8,7 @@
     Author: Klaudiusz Staniek (kstaniek@gmail.com)
 """
 
-
+from sleekxmpp import Iq, Message
 from sleekxmpp.xmlstream import ElementBase, ET, register_stanza_plugin
 
 from sleekxmpp.plugins.xep_0326.stanza.base import response_codes, \
@@ -78,39 +78,54 @@ class GetCapabilitiesResponse(ConcentratorResponseBase):
     
     name = 'getCapabilitiesResponse'
     plugin_attrib = 'getCapabilitiesResponse'
-    interfaces = set(['capabilities'])
     
     def setup(self, xml=None):
-        ElementBase.setup(self, xml)
-        self._set_attr('result', 'OK')
-    
-    def set_result(self, value):
-        if value in response_codes:
-            self._set_attr('result', value)
-        else:
-            raise ValueError('Unknown response code: %s' % value)
-    
+        super().setup(xml)
+        """ 
+        The the child classes are not available at this stage and not able to retrieve
+        the list of capabilities with self['capabilities'] when stanza initialized from
+        XML
+        """
+        #self._capabilities = set([capability.text for capability in self.xml.findall('{%s}value' % (self.namespace))])
+        #self._capabilities = set([c['value'] for c in self['capabilities']])
+        #print("setup capa: %s" % self._capabilities)
+        
     def add_capabilities(self, values):
+        """
+        Add capability or list of capabilities to the stanza
+        
+        Paramaters:
+            values: List of capabilities as string
+        """
+        #print('add_capa callaed %s, %s' % (self._capabilities, values))
         if not isinstance(values, list):
             values = [values]
         for value in values:
-            capability = Capability(parent=self)
+            capability = Capability() #no parent=self means don't add to xml at this stage
             capability['value'] = value
-            self.iterables.append(capability)
+            self.append(capability)   #add class
     
     def get_capabilities(self):
-        capabilities = set()
-        for capability in self['substanzas']:
-            if isinstance(capability, Capability):
-                capabilities.add((capability['value']))
-        return capabilities
-
-
+        """
+        Returns a set of capabilities
+        """
+        return set([capability.text for capability in
+            self.xml.findall('{%s}value' % (self.namespace))])
+        
+    def append(self, item):
+        if isinstance(item, Capability):
+            capabilities = set([capability.text for capability in self.xml.findall('{%s}value' % (self.namespace))])
+            value = item['value']
+            if value in capabilities:
+                return self
+        super().append(item)
+                   
 class Capability(ConcentratorBase):
     name = 'value'
     plugin_attrib = 'capability'
     plugin_multi_attrib = 'capabilities'
     interfaces = set(['value'])
+    sub_interfaces = set()
     
     capabilities = set(['getCapabilities', 'getAllDataSources', 'getRootDataSources',
                         'getChildDataSources', 'containsNode', 'containsNodes',
@@ -141,6 +156,8 @@ class Capability(ConcentratorBase):
     def del_value(self, value):
         self.xml.text = ''
     
+register_stanza_plugin(Iq, GetCapabilities)
+register_stanza_plugin(Iq, GetCapabilitiesResponse)
 register_stanza_plugin(GetCapabilitiesResponse, Capability, iterable=True)
 
 
@@ -148,20 +165,68 @@ register_stanza_plugin(GetCapabilitiesResponse, Capability, iterable=True)
 
 if __name__ == '__main__':
 
-    cap = GetCapabilities()
-    print("%s" % cap)
+    #cap = GetCapabilities()
+    #print("%s" % cap)
     
-    resp = GetCapabilitiesResponse()
-    resp.add_capabilities('getCapabilities')
-    resp.add_capabilities('subscribe')
-    resp.add_capabilities(['unsubscribe', 'getAllDataSources'])
-    resp['result'] = 'NotImplemented'
-    print("%s" % resp )
+    #resp = GetCapabilitiesResponse()
+    #resp.add_capabilities('getCapabilities')
+    #resp.add_capabilities('subscribe')
+    #resp.add_capabilities(['unsubscribe', 'getAllDataSources'])
+    #resp['result'] = 'NotImplemented'
+    #print("%s" % resp )
     
-    print("%s" % resp['capabilities'] )
+    #print("%s" % resp['capabilities'] )
     
     #for capability in resp['capabilities']:
     #    print capability['value']
+    xml_string = """
+        <iq id="0">
+        <getCapabilitiesResponse xmlns='urn:xmpp:iot:concentrators'>
+            <value>getCapabilities</value>
+            <value>getAllDataSources</value>
+        </getCapabilitiesResponse>
+        </iq>
+    """
+    
+    xml = ET.fromstring(xml_string)
+    stanza = Iq(xml=xml)
+    
+    print("Whole stanza: %s" % stanza )
+    
+    cap = stanza['getCapabilitiesResponse']['capabilities']
+    print("cap: %s" % cap)
+    print("%s" % stanza['getCapabilitiesResponse'].get_capabilities())
+    print("%s" % stanza['getCapabilitiesResponse'].keys())
+    print("Result: %s" % stanza['getCapabilitiesResponse']['result'])
+    
+    capa = stanza['getCapabilitiesResponse']['capabilities']
+    for c in capa:
+        #print(type(c))
+        print("%s" % c['value'])
+    
+    print('--------------------------------')
+    stanza['getCapabilitiesResponse'].add_capabilities('subscribe')
+    stanza['getCapabilitiesResponse'].add_capabilities('getCapabilities')
+    stanza['getCapabilitiesResponse'].add_capabilities(['moveNodeUp','moveNodeDown'])
+    stanza['getCapabilitiesResponse'].add_capabilities(['moveNodeUp','moveNodeDown'])
+    
+    print('capabilities %s' % stanza['getCapabilitiesResponse']['capabilities'])
+    
+    c = Capability()
+    c['value'] = 'executeNodeCommand'
+    capa = stanza['getCapabilitiesResponse'] #['capabilities']
+    capa.append(c)
+    c1 = Capability()
+    c1['value'] = 'executeNodeCommand'
+    capa.append(c1)
+    
+    
     
 
+    for c in capa:
+        print("%s" % c['value'])
+    
+    #print("%s" % stanza['getCapabilitiesResponse'].get_capabilities())
+    
+    #print("%s" % [value['value'] for value in stanza['getCapabilitiesResponse']['capabilities']])
     exit(1)

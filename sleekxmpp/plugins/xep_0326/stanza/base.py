@@ -10,10 +10,25 @@
 
 from sleekxmpp.xmlstream import ElementBase
 
+# Keys dictionary definition
 response_codes = set(['OK', 'NotFound', 'InsufficientPrivileges', 'Locked', 'NotImplemented',
             'FormError', 'OtherError'])
-            
-            
+
+node_state = set(['None','Information','WarningSigned','WarningUnsigned','ErrorSigned',
+            'ErrorUnsigned'])
+
+message_type = set(['Error','Warning','Information'])
+
+command_type = set(['Simple','Parametrized','Query'])
+
+alignment = set(['Left','Center','Right'])
+
+event_type = message_type | set(['Exception'])
+
+event_level = set(['Minor','Medium','Major'])
+
+
+
 xep_0326_namespace = 'urn:xmpp:iot:concentrators'
 
 
@@ -26,7 +41,7 @@ class ConcentratorBase(ElementBase):
     """    
     namespace = xep_0326_namespace
     interfaces = set()
-    
+           
 
 class ConcentratorResponseBase(ConcentratorBase):
     
@@ -38,12 +53,18 @@ class ConcentratorResponseBase(ConcentratorBase):
     """  
     
     def setup(self, xml=None):
-        super().setup(xml)
-        self._set_attr('result', 'OK')
         __class__.interfaces |= set(['result'])
+        super().setup(xml)
+        # Check whether object has 'result' initiated. If not feel with 'OK' by default
+        exists = self['result']
+        if not exists:
+            self['result'] = 'OK'
     
     def set_result(self, value):
         if value in response_codes:
             self._set_attr('result', value)
         else:
             raise ValueError('Unknown response code: %s' % value)
+    
+    def get_result(self):
+        return self._get_attr('result')
