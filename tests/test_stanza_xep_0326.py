@@ -118,7 +118,48 @@ class TestConcentratorStanzas(SleekTest):
 				</getCapabilitiesResponse>
 			</iq>
 			""")
+	
+	def testGetAllDataSources(self):
+		iq = self.Iq()
+		c = concentrator.GetAllDataSources()
+		stanza = iq['getAllDataSources']
+		stanza['lang'] = 'en'
+		self.check(iq, """
+			<iq id="0">
+				<getAllDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='en'/>
+			</iq>""")
 
+	def testGetRootDataSources(self):
+		iq = self.Iq()
+		c = concentrator.GetRootDataSources()
+		stanza = iq['getRootDataSources']
+		stanza['lang'] = 'pl'
+		self.check(iq, """
+			<iq id="0">
+				<getRootDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='pl'/>
+			</iq>""")
+	
+	def testGetChildDataSources(self):
+		iq = self.Iq()
+		c = concentrator.GetRootDataSources()
+		stanza = iq['getChildDataSources']
+		stanza['lang'] = 'nl'
+		stanza['sourceId'] = 'MeteringRoot'
+		#stanza['lastChanged'] = '2013-03-19T17:58:01Z'
+		stanza['lastChanged'] = 'dupa'
+		
+		self.check(iq, """
+			<iq id="0">
+				<getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='nl'
+					sourceId='MeteringRoot' lastChanged='2013-03-19T17:58:01Z'/>
+			</iq>""")
+		
+		stanza['lastChanged'] = None
+		self.check(iq, """
+			<iq id="0">
+				<getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='nl'
+					sourceId='MeteringRoot'/>
+			</iq>""")
 
 #     def testAffiliations(self):
 #         "Testing iq/pubsub/affiliations/affiliation stanzas"

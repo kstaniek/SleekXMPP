@@ -8,6 +8,8 @@
     Author: Klaudiusz Staniek (kstaniek@gmail.com)
 """
 
+from sleekxmpp import Iq, Message
+from sleekxmpp.xmlstream import ElementBase, ET, register_stanza_plugin
 
 from sleekxmpp.xmlstream import ElementBase, ET, register_stanza_plugin
 from sleekxmpp.plugins import xep_0082   #for timestamp
@@ -24,7 +26,7 @@ class GetAllDataSources(ConcentratorBase):
     """
     A stanza class for XML content of the form:
     
-    <getAllDataSources xmlns='urn:xmpp:xot:concentrators' xml:lang='en'/>
+    <getAllDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='en'/>
     
     """
     name = 'getAllDataSources'
@@ -35,19 +37,19 @@ class GetRootDataSources(ConcentratorBase):
     """
     A stanza class for XML content of the form:
     
-    <getRootDataSources xmlns='urn:xmpp:xot:concentrators' xml:lang='en'/>
+    <getRootDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='en'/>
     
     """
     name = 'getRootDataSources'
     plugin_attrib = 'getRootDataSources'
 
-class GetChildDataSources(ConcentratorBase):
-    
+class GetChildDataSources(ConcentratorBase): 
     """
-    A stanza class for XML content of the form:
+    A stanza class for XML content 
     
-    <getChildDataSources xmlns='urn:xmpp:xot:concentrators' xml:lang='en' sourceId='MeteringRoot' sourceId='MeteringRoot' xml:lang='en' lastChanged='2013-03-19T17:58:01Z'/>
-    
+    of the form:
+    <getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='en' 
+    sourceId='MeteringRoot' sourceId='MeteringRoot' lastChanged='2013-03-19T17:58:01Z'/>
     """
     name = 'getChildDataSources'
     plugin_attrib = 'getChildDataSources'
@@ -58,10 +60,18 @@ class GetChildDataSources(ConcentratorBase):
         return self._get_attr('lastChanged', None)
             
     def set_lastchanged(self, value):
+        """
+        Set the lastChange attribute
+        
+        If value is not a valid ISO 8601 format nor datetime 
+        then attribute is not changed
+        """
         lastChanged = value
         if not isinstance(value, dt.datetime):
-            lastChanged = xep_0082.parse(value)
-        ##print 'set_lastchanged',lastChanged, xep_0082.format_datetime(lastChanged)               
+            try:
+                lastChanged = xep_0082.parse(value)
+            except ValueError:
+                return
         self._set_attr('lastChanged', xep_0082.format_datetime(lastChanged))
 
 
@@ -89,7 +99,7 @@ class GetDataSourcesResponse(ConcentratorResponseBase):
     _data_sources = set()
         
     def setup(self, xml=None):
-        super().setup(xml)
+        super(GetDataSourcesResponse, self).setup(xml)
         # for keeping information about the id's to avoid duplication
         self._data_sources = set([item[0:1] for item in self['data_sources']])
     
@@ -196,12 +206,6 @@ class DataSource(ConcentratorBase):
 
         self._set_attr('lastChanged', xep_0082.format_datetime(lastChanged))
 
-    
-register_stanza_plugin(GetAllDataSourcesResponse, DataSource, iterable=True)
-register_stanza_plugin(GetRootDataSourcesResponse, DataSource, iterable=True)
-register_stanza_plugin(GetChildDataSourcesResponse, DataSource, iterable=True)
-
-
 class Subscribe(ConcentratorBase):
     
     """
@@ -240,7 +244,7 @@ class Subscribe(ConcentratorBase):
             value = self._get_attr(attrib, 'true')
             return value.lower() in ('1', 'true')
         
-        super().__getitem__(attrib)
+        super(Subscribe, self).__getitem__(attrib)
         #ConcentratorElemenBase.__getitem__(self, attrib)
     
     def __setitem__(self, attrib, value):
@@ -254,7 +258,7 @@ class Subscribe(ConcentratorBase):
                 self._set_attr(attrib, 'false')
             return
             
-        super().__setitem__(attrib, value)
+        super(Subscribe, self).__setitem__(attrib, value)
         
     
     def get_events(self):
@@ -314,6 +318,18 @@ class UnsubscribeResponse(ConcentratorResponseBase):
     plugin_attrib = 'subscribeResponse'
    
     
+register_stanza_plugin(Iq, GetAllDataSources)
+register_stanza_plugin(Iq, GetAllDataSourcesResponse) 
+register_stanza_plugin(Iq, GetRootDataSources)
+register_stanza_plugin(Iq, GetRootDataSourcesResponse)
+register_stanza_plugin(Iq, GetChildDataSources)
+register_stanza_plugin(Iq, GetChildDataSourcesResponse)
+register_stanza_plugin(GetAllDataSourcesResponse, DataSource, iterable=True)
+register_stanza_plugin(GetRootDataSourcesResponse, DataSource, iterable=True)
+register_stanza_plugin(GetChildDataSourcesResponse, DataSource, iterable=True)
+
+
+
 #for testing
 
 if __name__ == '__main__':

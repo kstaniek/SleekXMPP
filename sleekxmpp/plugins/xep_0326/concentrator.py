@@ -3,7 +3,7 @@
     Copyright (C) 2012 Nathanael C. Fritz, Lance J.T. Stout
     This file is part of SleekXMPP.
 
-    See the file LICENSE for copying permissio
+    See the file LICENSE for copying permission
     
     Author: Klaudiusz Staniek (kstaniek@gmail.com)
 """
@@ -13,7 +13,7 @@ import logging
 import sleekxmpp
 from sleekxmpp.stanza import Message, Iq
 from sleekxmpp.exceptions import XMPPError
-from sleekxmpp.xmlstream.handler import Collector
+from sleekxmpp.xmlstream.handler import Callback
 from sleekxmpp.xmlstream.matcher import StanzaPath
 from sleekxmpp.xmlstream import register_stanza_plugin
 from sleekxmpp.plugins import BasePlugin
@@ -21,8 +21,8 @@ from sleekxmpp.plugins import BasePlugin
 
 from sleekxmpp.plugins.xep_0326 import stanza
 
-log = logging.getLogger(__name__)
 
+log = logging.getLogger(__name__)
 
 class XEP_0326(BasePlugin):
 
@@ -36,15 +36,35 @@ class XEP_0326(BasePlugin):
     stanza = stanza
 
     def plugin_init(self):
-        pass
+        """
+        Start XEP-0326 plugin
+        """
+        self.xmpp.register_handler(
+                Callback('GetCapabilities',
+                         StanzaPath('iq/getCapabilities'),
+                         self._handle_get_capabilities))
         
+        self.xmpp.register_handler(
+                Callback('GetAllDataSources',
+                         StanzaPath('iq/getAllDataSources'),
+                         self._handle_get_all_data_sources))
+        
+    
+    
     def session_bind(self, jid):
-        self.xmpp['xep_0030'].add_feature(feature=xep_0326_namespace)
+        print("session bind")
+        self.xmpp['xep_0030'].add_feature(feature=stanza.xep_0326_namespace)
         
         
     def plugin_end(self):
-        self.xmpp['xep_0030'].del_feature(feature=xep_0326_namespace)
-        #self.xmpp.remove_handler('Get Capabilities')
+        self.xmpp['xep_0030'].del_feature(feature=stanza.xep_0326_namespace)
+        self.xmpp.remove_handler('GetCapabilities')
+        self.xmpp.remove_handler('GetAllDataSources')
         
 
+    def _handle_get_capabilities(self, message):
+        self.xmpp.event("getCapabilities", message)
+    
+    def _handle_get_all_data_sources(self, message):
+        self.xmpp.event("getAllDataSources", message)
     

@@ -8,9 +8,10 @@ import distutils.core
 
 from glob import glob
 from os.path import splitext, basename, join as pjoin
+from optparse import OptionParser
 
 
-def run_tests():
+def run_tests(files="*.py"):
     """
     Find and run all tests in the tests/ directory.
 
@@ -18,10 +19,10 @@ def run_tests():
     """
     testfiles = ['tests.test_overall']
     exclude = ['__init__.py', 'test_overall.py']
-    for t in glob(pjoin('tests/0326', '*.py')):
+    for t in glob(pjoin('tests', files)):
         if True not in [t.endswith(ex) for ex in exclude]:
             if basename(t).startswith('test_'):
-                testfiles.append('tests.0326.%s' % splitext(basename(t))[0])
+                testfiles.append('tests.%s' % splitext(basename(t))[0])
 
     suites = []
     for file in testfiles:
@@ -56,7 +57,13 @@ class TestCommand(distutils.core.Command):
 
 
 if __name__ == '__main__':
-    result = run_tests()
+    optp = OptionParser()
+    # Select specific test.
+    optp.add_option("-t", "--test", dest="test_name", help="Filename of the specific test", default="*.py")
+    opts, args = optp.parse_args()
+
+
+    result = run_tests(opts.test_name)
     print("<tests %s ran='%s' errors='%s' fails='%s' success='%s' />" % (
         "xmlns='http//andyet.net/protocol/tests'",
         result.testsRun, len(result.errors),

@@ -3,7 +3,7 @@
     Copyright (C) 2012 Nathanael C. Fritz, Lance J.T. Stout
     This file is part of SleekXMPP.
     
-    See the file LICENSE for copying permissio
+    See the file LICENSE for copying permission
     
     Author: Klaudiusz Staniek (kstaniek@gmail.com)
 """
@@ -78,17 +78,6 @@ class GetCapabilitiesResponse(ConcentratorResponseBase):
     
     name = 'getCapabilitiesResponse'
     plugin_attrib = 'getCapabilitiesResponse'
-    
-    def setup(self, xml=None):
-        super().setup(xml)
-        """ 
-        The the child classes are not available at this stage and not able to retrieve
-        the list of capabilities with self['capabilities'] when stanza initialized from
-        XML
-        """
-        #self._capabilities = set([capability.text for capability in self.xml.findall('{%s}value' % (self.namespace))])
-        #self._capabilities = set([c['value'] for c in self['capabilities']])
-        #print("setup capa: %s" % self._capabilities)
         
     def add_capabilities(self, values):
         """
@@ -118,7 +107,7 @@ class GetCapabilitiesResponse(ConcentratorResponseBase):
             value = item['value']
             if value in capabilities:
                 return self
-        super().append(item)
+        super(GetCapabilitiesResponse, self).append(item)
                    
 class Capability(ConcentratorBase):
     name = 'value'

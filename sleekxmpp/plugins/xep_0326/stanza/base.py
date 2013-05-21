@@ -53,8 +53,8 @@ class ConcentratorResponseBase(ConcentratorBase):
     """  
     
     def setup(self, xml=None):
-        __class__.interfaces |= set(['result'])
-        super().setup(xml)
+        self.interfaces |= set(['result'])
+        super(ConcentratorResponseBase, self).setup(xml)
         # Check whether object has 'result' initiated. If not feel with 'OK' by default
         exists = self['result']
         if not exists:
