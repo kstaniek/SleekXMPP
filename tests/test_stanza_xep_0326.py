@@ -5,7 +5,7 @@ import sleekxmpp.plugins.xep_0326.stanza as concentrator
 class TestConcentratorStanzas(SleekTest):
 	def testGetCapabilities(self):
 		iq = self.Iq()
-		c = concentrator.GetCapabilities()
+		#c = concentrator.GetCapabilities()
 		iq['getCapabilities']
 		self.check(iq, """
 			<iq id="0">
@@ -145,8 +145,7 @@ class TestConcentratorStanzas(SleekTest):
 		stanza = iq['getChildDataSources']
 		stanza['lang'] = 'nl'
 		stanza['sourceId'] = 'MeteringRoot'
-		#stanza['lastChanged'] = '2013-03-19T17:58:01Z'
-		stanza['lastChanged'] = 'dupa'
+		stanza['lastChanged'] = '2013-03-19T17:58:01Z'
 		
 		self.check(iq, """
 			<iq id="0">
@@ -160,6 +159,27 @@ class TestConcentratorStanzas(SleekTest):
 				<getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='nl'
 					sourceId='MeteringRoot'/>
 			</iq>""")
+
+	def testGetAllDataSourcesResponse(self):
+		iq = self.Iq()
+		stanza = iq['getAllDataSourcesResponse']
+		stanza['result'] = 'OK'
+		stanza.add_data_source('MeteringRoot', 'Metering', False, '2013-03-19T17:58:01Z')
+		stanza.add_data_source('SecurityRoot', 'Security', False, '2013-01-12T22:03:50Z')
+		stanza.add_data_source('SystemRoot', 'System', False, '2012-02-20T12:34:56Z')
+		
+		self.check(iq, """
+			<iq id="0">
+			<getAllDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+          		<dataSource id='MeteringRoot' name='Metering' hasChildren='false' lastChanged='2013-03-19T17:58:01Z'/>
+          		<dataSource id='SecurityRoot' name='Security' hasChildren='false' lastChanged='2013-01-12T22:03:50Z'/>
+          		<dataSource id='SystemRoot' name='System' hasChildren='false' lastChanged='2012-02-20T12:34:56Z'/>
+	    	</getAllDataSourcesResponse>
+	    	</iq>""")
+    		  
+    
+		
+		
 
 #     def testAffiliations(self):
 #         "Testing iq/pubsub/affiliations/affiliation stanzas"

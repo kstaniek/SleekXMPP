@@ -86,7 +86,6 @@ class GetCapabilitiesResponse(ConcentratorResponseBase):
         Paramaters:
             values: List of capabilities as string
         """
-        #print('add_capa callaed %s, %s' % (self._capabilities, values))
         if not isinstance(values, list):
             values = [values]
         for value in values:

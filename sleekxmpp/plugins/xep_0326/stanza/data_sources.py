@@ -92,46 +92,50 @@ class GetDataSourcesResponse(ConcentratorResponseBase):
         add_data_source         -- Add a single data source.
         get_data_sources        -- Return all data source in tuple form.
     """
-    
-    interfaces = set(['data_sources'])
-
-    # Cache items
-    _data_sources = set()
-        
-    def setup(self, xml=None):
-        super(GetDataSourcesResponse, self).setup(xml)
-        # for keeping information about the id's to avoid duplication
-        self._data_sources = set([item[0:1] for item in self['data_sources']])
-    
-                
+                        
     def add_data_source(self, id, name, hasChildren=False, lastChanged=None):
-        if id not in self._data_sources:
-            self._data_sources.add((id))
-            data_source = DataSource(parent=self)
-            data_source['id'] = id
-            data_source['name'] = name
-            data_source['hasChildren'] = hasChildren
-            data_source['lastChanged'] = lastChanged
-            self.iterables.append(data_source)
-            return True
-        return False
-      
+        """
+        Adds data source to the stanza
+        
+        params:
+            id: Data source Id
+            name: Data source name
+            hasChildren: bool flag indicating whether source has children
+            lastChanged: ISO 8601 string or datetime object
+        """    
+        data_source = DataSource() #no parent=self means don't add to xml
+        data_source['id'] = id
+        data_source['name'] = name
+        data_source['hasChildren'] = hasChildren
+        data_source['lastChanged'] = lastChanged
+        self.append(data_source)
+    
+    
     def get_data_sources(self):
-        """ Return all data sources """
+        """
+        Return all data sources
+        """
+        print('get_data_sources')
         data_sources = set()
-        for data_source in self['substanzas']:
+        print("%s" % set([data_source.values] for data_source in self['data_sources']))
+        exit()
+        data_sources = set(set([data_source.values]) for data_source in self['data_sources'])
+        return data_sources
+        for data_source in self['data_sources']:
             if isinstance(data_source, DataSource):
+                print("data source: %s" % data_source.values)
                 data_sources.add((data_source['id'], 
                                 data_source['name'],
                                 data_source['hasChildren'],
                                 data_source['lastChanged']))
+                                
         return data_sources
-        
+    
 
 
 class GetAllDataSourcesResponse(GetDataSourcesResponse):
     """
-    <getAllDataSourcesResponse xmlns='urn:xmpp:xot:concentrators' result='OK'>
+    <getAllDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
           <dataSource id='Applications' name='Applications' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
           <dataSource id='Certificates' name='Certificates' hasChildren='false' lastChanged='2013-02-20T12:31:54'/>
           <dataSource id='Clayster.EventSink.Programmable' name='Programmable Event Log' hasChildren='false' lastChanged='2012-10-25T09:31:12'/>
@@ -324,6 +328,8 @@ register_stanza_plugin(Iq, GetRootDataSources)
 register_stanza_plugin(Iq, GetRootDataSourcesResponse)
 register_stanza_plugin(Iq, GetChildDataSources)
 register_stanza_plugin(Iq, GetChildDataSourcesResponse)
+
+
 register_stanza_plugin(GetAllDataSourcesResponse, DataSource, iterable=True)
 register_stanza_plugin(GetRootDataSourcesResponse, DataSource, iterable=True)
 register_stanza_plugin(GetChildDataSourcesResponse, DataSource, iterable=True)
@@ -377,8 +383,9 @@ if __name__ == '__main__':
     resp.add_data_source('thermostats', 'All Thermostats')
     resp.add_data_source('thermostats', 'All Thermostates')
     
-    print("%s" % resp)
     print("%s" % resp.get_data_sources())
+    
+    print("%s" % resp)
     
     print('============GetRootDataSources===================')
     
