@@ -3,59 +3,59 @@ import sleekxmpp.plugins.xep_0326.stanza as concentrator
 
 
 class TestConcentratorStanzas(SleekTest):
-	def testGetCapabilities(self):
-		iq = self.Iq()
-		#c = concentrator.GetCapabilities()
-		iq['getCapabilities']
-		self.check(iq, """
-			<iq id="0">
-				<getCapabilities xmlns='urn:xmpp:iot:concentrators' />
-			</iq>""")
-	
-	def testGetCapabilitiesResponse(self):
-		iq = self.Iq()
-		capabilities = iq['getCapabilitiesResponse']
-		capabilities.add_capabilities('getCapabilities')
-		# by default result is initiated to 'OK'
-		self.check(iq, """
-			<iq id="0">
-				<getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="OK">
-					<value>getCapabilities</value>
-				</getCapabilitiesResponse>
-			</iq>
-			""")
+    def testGetCapabilities(self):
+        iq = self.Iq()
+        #c = concentrator.GetCapabilities()
+        iq['getCapabilities']
+        self.check(iq, """
+            <iq id="0">
+                <getCapabilities xmlns='urn:xmpp:iot:concentrators' />
+            </iq>""")
+    
+    def testGetCapabilitiesResponse(self):
+        iq = self.Iq()
+        capabilities = iq['getCapabilitiesResponse']
+        capabilities.add_capabilities('getCapabilities')
+        # by default result is initiated to 'OK'
+        self.check(iq, """
+            <iq id="0">
+                <getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="OK">
+                    <value>getCapabilities</value>
+                </getCapabilitiesResponse>
+            </iq>
+            """)
 
-		c = concentrator.Capability()
-		c['value'] = 'executeNodeCommand'
-		capabilities.append(c)		
-		capabilities['result'] = 'OtherError'
-		capabilities.add_capabilities('subscribe')
+        c = concentrator.Capability()
+        c['value'] = 'executeNodeCommand'
+        capabilities.append(c)        
+        capabilities['result'] = 'OtherError'
+        capabilities.add_capabilities('subscribe')
 
-		self.check(iq, """
-			<iq id="0">
-				<getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="OtherError">
-					<value>getCapabilities</value>
-					<value>subscribe</value>
-					<value>executeNodeCommand</value>
-				</getCapabilitiesResponse>
-			</iq>
-			""")
+        self.check(iq, """
+            <iq id="0">
+                <getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="OtherError">
+                    <value>getCapabilities</value>
+                    <value>subscribe</value>
+                    <value>executeNodeCommand</value>
+                </getCapabilitiesResponse>
+            </iq>
+            """)
 
-		capabilities.add_capabilities(['unsubscribe', 'getAllDataSources'])
-		capabilities['result'] = 'OK'
-		self.check(iq, """
-			<iq id="0">
-				<getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="OK">
-					<value>getCapabilities</value>
-					<value>subscribe</value>
-					<value>unsubscribe</value>
-					<value>getAllDataSources</value>
-					<value>executeNodeCommand</value>
-				</getCapabilitiesResponse>
-			</iq>
-			""")
+        capabilities.add_capabilities(['unsubscribe', 'getAllDataSources'])
+        capabilities['result'] = 'OK'
+        self.check(iq, """
+            <iq id="0">
+                <getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="OK">
+                    <value>getCapabilities</value>
+                    <value>subscribe</value>
+                    <value>unsubscribe</value>
+                    <value>getAllDataSources</value>
+                    <value>executeNodeCommand</value>
+                </getCapabilitiesResponse>
+            </iq>
+            """)
 
-		capabilities.add_capabilities(['getCapabilities', 'getAllDataSources', 'getRootDataSources',
+        capabilities.add_capabilities(['getCapabilities', 'getAllDataSources', 'getRootDataSources',
                          'getChildDataSources', 'containsNode', 'containsNodes',
                          'getNode', 'getNodes', 'getAllNodes', 'getNodeInheritance',
                          'getRootNodes', 'getChildNodes', 'getIndices',
@@ -70,116 +70,125 @@ class TestConcentratorStanzas(SleekTest):
                          'moveNodeUp', 'moveNodeDown', 'moveNodesUp', 'moveNodesDown',
                          'subscribe', 'unsubscribe', 'getDatabases',
                          'getDatabaseReadoutParameters', 'startDatabaseReadout'])
-		
-		capabilities['result'] = 'NotImplemented'
-		self.check(iq, """
-			<iq id="0">
-				<getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="NotImplemented">
-					<value>getCapabilities</value>
-					<value>getAllDataSources</value>
-					<value>getRootDataSources</value>
-					<value>getChildDataSources</value>
-					<value>containsNode</value>
-					<value>containsNodes</value>
-					<value>getNode</value>
-					<value>getNodes</value>
-					<value>getAllNodes</value>
-					<value>getNodeInheritance</value>
-					<value>getRootNodes</value>
-					<value>getChildNodes</value>
-					<value>getIndices</value>
-					<value>getNodesFromIndex</value>
-					<value>getNodesFromIndices</value>
-					<value>getAllIndexValues</value>
-					<value>getNodeParametersForEdit</value>
-					<value>setNodeParametersAfterEdit</value>
-					<value>getCommonNodeParametersForEdit</value>
-					<value>setCommonNodeParametersAfterEdit</value>
-					<value>getAddableNodeTypes</value>
-					<value>getParametersForNewNode</value>
-					<value>createNewNode</value>
-					<value>destroyNode</value>
-					<value>getAncestors</value>
-					<value>getNodeCommands</value>
-					<value>getCommandParameters</value>
-					<value>executeNodeCommand</value>
-					<value>getCommonNodeCommands</value>
-					<value>getCommonCommandParameters</value>
-					<value>executeCommonNodeCommand</value>
-					<value>moveNodeUp</value>
-					<value>moveNodeDown</value>
-					<value>moveNodesUp</value>
-					<value>moveNodesDown</value>
-					<value>subscribe</value>
-					<value>unsubscribe</value>
-					<value>getDatabases</value>
-					<value>getDatabaseReadoutParameters</value>
-					<value>startDatabaseReadout</value>
-				</getCapabilitiesResponse>
-			</iq>
-			""")
-	
-	def testGetAllDataSources(self):
-		iq = self.Iq()
-		c = concentrator.GetAllDataSources()
-		stanza = iq['getAllDataSources']
-		stanza['lang'] = 'en'
-		self.check(iq, """
-			<iq id="0">
-				<getAllDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='en'/>
-			</iq>""")
-
-	def testGetRootDataSources(self):
-		iq = self.Iq()
-		c = concentrator.GetRootDataSources()
-		stanza = iq['getRootDataSources']
-		stanza['lang'] = 'pl'
-		self.check(iq, """
-			<iq id="0">
-				<getRootDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='pl'/>
-			</iq>""")
-	
-	def testGetChildDataSources(self):
-		iq = self.Iq()
-		c = concentrator.GetRootDataSources()
-		stanza = iq['getChildDataSources']
-		stanza['lang'] = 'nl'
-		stanza['sourceId'] = 'MeteringRoot'
-		stanza['lastChanged'] = '2013-03-19T17:58:01Z'
-		
-		self.check(iq, """
-			<iq id="0">
-				<getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='nl'
-					sourceId='MeteringRoot' lastChanged='2013-03-19T17:58:01Z'/>
-			</iq>""")
-		
-		stanza['lastChanged'] = None
-		self.check(iq, """
-			<iq id="0">
-				<getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='nl'
-					sourceId='MeteringRoot'/>
-			</iq>""")
-
-	def testGetAllDataSourcesResponse(self):
-		iq = self.Iq()
-		stanza = iq['getAllDataSourcesResponse']
-		stanza['result'] = 'OK'
-		stanza.add_data_source('MeteringRoot', 'Metering', False, '2013-03-19T17:58:01Z')
-		stanza.add_data_source('SecurityRoot', 'Security', False, '2013-01-12T22:03:50Z')
-		stanza.add_data_source('SystemRoot', 'System', False, '2012-02-20T12:34:56Z')
-		
-		self.check(iq, """
-			<iq id="0">
-			<getAllDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
-          		<dataSource id='MeteringRoot' name='Metering' hasChildren='false' lastChanged='2013-03-19T17:58:01Z'/>
-          		<dataSource id='SecurityRoot' name='Security' hasChildren='false' lastChanged='2013-01-12T22:03:50Z'/>
-          		<dataSource id='SystemRoot' name='System' hasChildren='false' lastChanged='2012-02-20T12:34:56Z'/>
-	    	</getAllDataSourcesResponse>
-	    	</iq>""")
-    		  
+        
+        capabilities['result'] = 'NotImplemented'
+        self.check(iq, """
+            <iq id="0">
+                <getCapabilitiesResponse xmlns="urn:xmpp:iot:concentrators" result="NotImplemented">
+                    <value>getCapabilities</value>
+                    <value>getAllDataSources</value>
+                    <value>getRootDataSources</value>
+                    <value>getChildDataSources</value>
+                    <value>containsNode</value>
+                    <value>containsNodes</value>
+                    <value>getNode</value>
+                    <value>getNodes</value>
+                    <value>getAllNodes</value>
+                    <value>getNodeInheritance</value>
+                    <value>getRootNodes</value>
+                    <value>getChildNodes</value>
+                    <value>getIndices</value>
+                    <value>getNodesFromIndex</value>
+                    <value>getNodesFromIndices</value>
+                    <value>getAllIndexValues</value>
+                    <value>getNodeParametersForEdit</value>
+                    <value>setNodeParametersAfterEdit</value>
+                    <value>getCommonNodeParametersForEdit</value>
+                    <value>setCommonNodeParametersAfterEdit</value>
+                    <value>getAddableNodeTypes</value>
+                    <value>getParametersForNewNode</value>
+                    <value>createNewNode</value>
+                    <value>destroyNode</value>
+                    <value>getAncestors</value>
+                    <value>getNodeCommands</value>
+                    <value>getCommandParameters</value>
+                    <value>executeNodeCommand</value>
+                    <value>getCommonNodeCommands</value>
+                    <value>getCommonCommandParameters</value>
+                    <value>executeCommonNodeCommand</value>
+                    <value>moveNodeUp</value>
+                    <value>moveNodeDown</value>
+                    <value>moveNodesUp</value>
+                    <value>moveNodesDown</value>
+                    <value>subscribe</value>
+                    <value>unsubscribe</value>
+                    <value>getDatabases</value>
+                    <value>getDatabaseReadoutParameters</value>
+                    <value>startDatabaseReadout</value>
+                </getCapabilitiesResponse>
+            </iq>
+            """)
     
-		
-		
+    def testGetAllDataSources(self):
+        iq = self.Iq()
+        c = concentrator.GetAllDataSources()
+        stanza = iq['getAllDataSources']
+        stanza['lang'] = 'en'
+        self.check(iq, """
+            <iq id="0">
+                <getAllDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='en'/>
+            </iq>""")
+
+    def testGetRootDataSources(self):
+        iq = self.Iq()
+        c = concentrator.GetRootDataSources()
+        stanza = iq['getRootDataSources']
+        stanza['lang'] = 'pl'
+        self.check(iq, """
+            <iq id="0">
+                <getRootDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='pl'/>
+            </iq>""")
+    
+    def testGetChildDataSources(self):
+        iq = self.Iq()
+        c = concentrator.GetRootDataSources()
+        stanza = iq['getChildDataSources']
+        stanza['lang'] = 'nl'
+        stanza['sourceId'] = 'MeteringRoot'
+        stanza['lastChanged'] = '2013-03-19T17:58:01Z'
+        
+        self.check(iq, """
+            <iq id="0">
+                <getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='nl'
+                    sourceId='MeteringRoot' lastChanged='2013-03-19T17:58:01Z'/>
+            </iq>""")
+        
+        stanza['lastChanged'] = None
+        self.check(iq, """
+            <iq id="0">
+                <getChildDataSources xmlns='urn:xmpp:iot:concentrators' xml:lang='nl'
+                    sourceId='MeteringRoot'/>
+            </iq>""")
+
+    def testGetAllDataSourcesResponse(self):
+        iq = self.Iq()
+        stanza = iq['getAllDataSourcesResponse']
+        stanza['result'] = 'OK'
+        stanza.add_data_source('MeteringRoot', 'Metering', False, '2013-03-19T17:58:01Z')
+        stanza.add_data_source('SecurityRoot', 'Security', False, '2013-01-12T22:03:50Z')
+        stanza.add_data_source('SystemRoot', 'System', False, '2012-02-20T12:34:56Z')
+        
+        self.check(iq, """
+            <iq id="0">
+            <getAllDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+                  <dataSource sourceId='MeteringRoot' name='Metering' hasChildren='false' lastChanged='2013-03-19T17:58:01Z'/>
+                  <dataSource sourceId='SecurityRoot' name='Security' hasChildren='false' lastChanged='2013-01-12T22:03:50Z'/>
+                  <dataSource sourceId='SystemRoot' name='System' hasChildren='false' lastChanged='2012-02-20T12:34:56Z'/>
+            </getAllDataSourcesResponse>
+            </iq>""")
+              
+    def testSubscribe(self):
+        iq = self.Iq()
+        stanza = iq['subscribe']
+        stanza['sourceId'] = 'MeteringTopology'
+        print("DUPA :%" % stanza['nodeAdded'])
+        self.check(iq, """
+            <iq id="0">
+                <subscribe xmlns='urn:xmpp:iot:concentrators' sourceId='MeteringTopology'/>
+            </iq>""", defaults=['nodeAdded','nodeMovedUp','nodeAdded','nodeMovedDown','nodeMovedUp','parameters','nodeStatusChanged','nodeRemoved'])
+        
+        
+        
 
 #     def testAffiliations(self):
 #         "Testing iq/pubsub/affiliations/affiliation stanzas"
@@ -314,7 +323,7 @@ class TestConcentratorStanzas(SleekTest):
 #                                                        ftype='text-single',
 #                                                        value='This thing is awesome')
 #         self.check(iq, """
-# 	      <iq id="0">
+#           <iq id="0">
 #             <pubsub xmlns="http://jabber.org/protocol/pubsub#owner">
 #               <default node="mynode">
 #                 <x xmlns="jabber:x:data" type="form">

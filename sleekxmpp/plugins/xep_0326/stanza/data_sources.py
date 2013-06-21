@@ -3,7 +3,7 @@
     Copyright (C) 2012 Nathanael C. Fritz, Lance J.T. Stout
     This file is part of SleekXMPP.
     
-    See the file LICENSE for copying permissio
+    See the file LICENSE for copying permission
     
     Author: Klaudiusz Staniek (kstaniek@gmail.com)
 """
@@ -93,7 +93,7 @@ class GetDataSourcesResponse(ConcentratorResponseBase):
         get_data_sources        -- Return all data source in tuple form.
     """
                         
-    def add_data_source(self, id, name, hasChildren=False, lastChanged=None):
+    def add_data_source(self, source_id, name, has_children=False, last_changed=None):
         """
         Adds data source to the stanza
         
@@ -104,10 +104,10 @@ class GetDataSourcesResponse(ConcentratorResponseBase):
             lastChanged: ISO 8601 string or datetime object
         """    
         data_source = DataSource() #no parent=self means don't add to xml
-        data_source['id'] = id
+        data_source['sourceId'] = source_id
         data_source['name'] = name
-        data_source['hasChildren'] = hasChildren
-        data_source['lastChanged'] = lastChanged
+        data_source['hasChildren'] = has_children
+        data_source['lastChanged'] = last_changed
         self.append(data_source)
     
     
@@ -117,14 +117,14 @@ class GetDataSourcesResponse(ConcentratorResponseBase):
         """
         print('get_data_sources')
         data_sources = set()
-        print("%s" % set([data_source.values] for data_source in self['data_sources']))
-        exit()
-        data_sources = set(set([data_source.values]) for data_source in self['data_sources'])
-        return data_sources
+        #print("%s" % set([data_source.values] for data_source in self['data_sources']))
+        #exit()
+        #data_sources = [ data_source for data_source in self['data_sources']]
+        #return data_sources
         for data_source in self['data_sources']:
             if isinstance(data_source, DataSource):
                 print("data source: %s" % data_source.values)
-                data_sources.add((data_source['id'], 
+                data_sources.add((data_source['sourceId'], 
                                 data_source['name'],
                                 data_source['hasChildren'],
                                 data_source['lastChanged']))
@@ -135,12 +135,12 @@ class GetDataSourcesResponse(ConcentratorResponseBase):
 
 class GetAllDataSourcesResponse(GetDataSourcesResponse):
     """
-    <getAllDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
-          <dataSource id='Applications' name='Applications' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='Certificates' name='Certificates' hasChildren='false' lastChanged='2013-02-20T12:31:54'/>
-          <dataSource id='Clayster.EventSink.Programmable' name='Programmable Event Log' hasChildren='false' lastChanged='2012-10-25T09:31:12'/>
-          ...
-    </getAllDataSourcesResponse>
+   <getAllDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+             <dataSource sourceId='Applications' name='Applications' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+             <dataSource sourceId='Certificates' name='Certificates' hasChildren='false' lastChanged='2013-02-20T12:31:54'/>
+             <dataSource sourceId='Clayster.EventSink.Programmable' name='Programmable Event Log' hasChildren='false' lastChanged='2012-10-25T09:31:12'/>
+             ...
+         </getAllDataSourcesResponse>
     
     """
     
@@ -149,12 +149,12 @@ class GetAllDataSourcesResponse(GetDataSourcesResponse):
         
 class GetRootDataSourcesResponse(GetDataSourcesResponse):
     """
-    <getRootDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
-          <dataSource id='MeteringRoot' name='Metering' hasChildren='true' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='SecurityRoot' name='Security' hasChildren='true' lastChanged='2013-01-12T22:03:50'/>
-          <dataSource id='SystemRoot' name='System' hasChildren='true' lastChanged='2012-02-20T12:34:56'/>
-          ...
-    </getRootDataSourcesResponse>
+	<getRootDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+	          <dataSource sourceId='MeteringRoot' name='Metering' hasChildren='true' lastChanged='2013-03-19T17:58:01'/>
+	          <dataSource sourceId='SecurityRoot' name='Security' hasChildren='true' lastChanged='2013-01-12T22:03:50'/>
+	          <dataSource sourceId='SystemRoot' name='System' hasChildren='true' lastChanged='2012-02-20T12:34:56'/>
+	          ...
+	      </getRootDataSourcesResponse>
     
     """
     
@@ -163,15 +163,15 @@ class GetRootDataSourcesResponse(GetDataSourcesResponse):
     
 class GetChildDataSourcesResponse(GetDataSourcesResponse):
     """
-    <getChildDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
-          <dataSource id='MeteringFieldImports' name='Field Imports' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='MeteringFieldProcessors' name='Field Processors' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='MeteringFieldSinks' name='Field Sinks' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='MeteringGroups' name='Groups' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='MeteringJobs' name='Jobs' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='MeteringTopology' name='Topology' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-          <dataSource id='MeteringUnitConversion' name='Unit Conversion' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
-      </getChildDataSourcesResponse>
+	<getChildDataSourcesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+	          <dataSource sourceId='MeteringFieldImports' name='Field Imports' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+	          <dataSource sourceId='MeteringFieldProcessors' name='Field Processors' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+	          <dataSource sourceId='MeteringFieldSinks' name='Field Sinks' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+	          <dataSource sourceId='MeteringGroups' name='Groups' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+	          <dataSource sourceId='MeteringJobs' name='Jobs' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+	          <dataSource sourceId='MeteringTopology' name='Topology' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+	          <dataSource sourceId='MeteringUnitConversion' name='Unit Conversion' hasChildren='false' lastChanged='2013-03-19T17:58:01'/>
+	      </getChildDataSourcesResponse>
     
     """
     
@@ -183,7 +183,7 @@ class DataSource(ConcentratorBase):
     name = 'dataSource'
     plugin_attrib = 'data_source'
     plugin_multi_attrib = 'data_sources'
-    interfaces = set(['id','name','hasChildren','lastChanged']) 
+    interfaces = set(['sourceId','name','hasChildren','lastChanged']) 
     
     
     def get_haschildren(self):
@@ -232,11 +232,11 @@ class Subscribe(ConcentratorBase):
             'nodeAdded', 'nodeUpdated', 'nodeStatusChanged', 'nodeRemoved', \
             'nodeMovedUp', 'nodeMovedDown'])
                 
-    def get_geteventssince(self):
+    def get_get_events_since(self):
         """ Return None if attrib not exists """
         return self._get_attr('getEventsSince', None)
             
-    def set_geteventssince(self, value):
+    def set_get_events_since(self, value):
         new_value = value
         if not isinstance(value, dt.datetime):
             new_value = xep_0082.parse(value)
@@ -328,6 +328,7 @@ register_stanza_plugin(Iq, GetRootDataSources)
 register_stanza_plugin(Iq, GetRootDataSourcesResponse)
 register_stanza_plugin(Iq, GetChildDataSources)
 register_stanza_plugin(Iq, GetChildDataSourcesResponse)
+register_stanza_plugin(Iq, Subscribe)
 
 
 register_stanza_plugin(GetAllDataSourcesResponse, DataSource, iterable=True)

@@ -49,6 +49,11 @@ class XEP_0326(BasePlugin):
                          StanzaPath('iq/getAllDataSources'),
                          self._handle_get_all_data_sources))
         
+        self.xmpp.register_handler(
+                Callback('subscribe',
+                         StanzaPath('iq@type=set/subscribe'),
+                         self._handle_data_source_subscribe))
+        
     
     
     def session_bind(self, jid):
@@ -60,6 +65,7 @@ class XEP_0326(BasePlugin):
         self.xmpp['xep_0030'].del_feature(feature=stanza.xep_0326_namespace)
         self.xmpp.remove_handler('GetCapabilities')
         self.xmpp.remove_handler('GetAllDataSources')
+        self.xmpp.remove_handler('subscribe')
         
 
     def _handle_get_capabilities(self, message):
@@ -67,4 +73,7 @@ class XEP_0326(BasePlugin):
     
     def _handle_get_all_data_sources(self, message):
         self.xmpp.event("getAllDataSources", message)
+
+    def _handle_data_source_subscribe(self, message):
+        self.xmpp.event("dataSourceSubscribe", message)
     
