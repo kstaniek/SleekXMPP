@@ -186,7 +186,11 @@ class TestConcentratorStanzas(SleekTest):
             <iq id="0">
                 <subscribe xmlns='urn:xmpp:iot:concentrators' sourceId='MeteringTopology'/>
             </iq>""", defaults=['nodeAdded','nodeMovedUp','nodeAdded','nodeMovedDown','nodeMovedUp','parameters','nodeStatusChanged','nodeRemoved'])
-        
+      
+    def testSubscribeResponse():
+        iq = self.Iq()
+        stanza = iq['getAllDataSourcesResponse']
+        stanza['result'] = 'OK'        
         
         
 

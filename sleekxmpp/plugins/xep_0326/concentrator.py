@@ -50,9 +50,14 @@ class XEP_0326(BasePlugin):
                          self._handle_get_all_data_sources))
         
         self.xmpp.register_handler(
-                Callback('subscribe',
+                Callback('Subscribe',
                          StanzaPath('iq@type=set/subscribe'),
                          self._handle_data_source_subscribe))
+        
+        self.xmpp.register_handler(
+                Callback('Unsubscribe',
+                         StanzaPath('iq@type=set/unsubscribe'),
+                         self._handle_data_source_unsubscribe))
         
     
     
@@ -65,7 +70,8 @@ class XEP_0326(BasePlugin):
         self.xmpp['xep_0030'].del_feature(feature=stanza.xep_0326_namespace)
         self.xmpp.remove_handler('GetCapabilities')
         self.xmpp.remove_handler('GetAllDataSources')
-        self.xmpp.remove_handler('subscribe')
+        self.xmpp.remove_handler('Subscribe')
+        self.xmpp.remove_handler('Unsubscribe')
         
 
     def _handle_get_capabilities(self, message):
@@ -76,4 +82,7 @@ class XEP_0326(BasePlugin):
 
     def _handle_data_source_subscribe(self, message):
         self.xmpp.event("dataSourceSubscribe", message)
+    
+    def _handle_data_source_unsubscribe(self, message):
+        self.xmpp.event("dataSourceUnsubscribe", message)
     

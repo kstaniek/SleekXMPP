@@ -248,7 +248,7 @@ class Subscribe(ConcentratorBase):
             value = self._get_attr(attrib, 'true')
             return value.lower() in ('1', 'true')
         
-        super(Subscribe, self).__getitem__(attrib)
+        return super(Subscribe, self).__getitem__(attrib)
         #ConcentratorElemenBase.__getitem__(self, attrib)
     
     def __setitem__(self, attrib, value):
@@ -288,11 +288,11 @@ class SubscribeResponse(ConcentratorResponseBase):
     
     name = 'subscribeResponse'
     plugin_attrib = 'subscribeResponse'
-    interfaces = set(['result'])
-    
-    def setup(self, xml=None):
-        ElementBase.setup(self, xml)
-        self.attrib['result'] = 'OK'
+#    interfaces = set(['result'])
+#    
+#    def setup(self, xml=None):
+#        ElementBase.setup(self, xml)
+#        self.attrib['result'] = 'OK'
         
 class Unsubscribe(Subscribe):
     
@@ -329,6 +329,8 @@ register_stanza_plugin(Iq, GetRootDataSourcesResponse)
 register_stanza_plugin(Iq, GetChildDataSources)
 register_stanza_plugin(Iq, GetChildDataSourcesResponse)
 register_stanza_plugin(Iq, Subscribe)
+register_stanza_plugin(Iq, SubscribeResponse)
+register_stanza_plugin(Iq, Unsubscribe)
 
 
 register_stanza_plugin(GetAllDataSourcesResponse, DataSource, iterable=True)
@@ -343,7 +345,7 @@ if __name__ == '__main__':
 
     print('=============DataSoruce================')
     ds = DataSource()
-    ds['id'] = 'devices'
+    ds['sourceId'] = 'devices'
     ds['name'] = 'All Z-wave devices'
     ds['hasChildren'] = 1    
     print("%s" % ds)
@@ -427,6 +429,7 @@ if __name__ == '__main__':
     print('============Subscribe===================')
     
     get = Subscribe()
+    get['sourceId'] = 'all'
     print(get['sourceId'])
     print(get['parameters'])
     print(get['messages'])
@@ -476,7 +479,7 @@ if __name__ == '__main__':
     print('============SubscribeResponse===================')
     
     resp = SubscribeResponse()
-    resp['result'] = 'NotImplemented'
+    resp['result'] = 'NotFound'
     print("%s" % resp)
     
     
