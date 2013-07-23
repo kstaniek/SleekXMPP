@@ -181,16 +181,49 @@ class TestConcentratorStanzas(SleekTest):
         iq = self.Iq()
         stanza = iq['subscribe']
         stanza['sourceId'] = 'MeteringTopology'
-        print("DUPA :%" % stanza['nodeAdded'])
+        print("DUPA :%s" % stanza['nodeAdded'])
         self.check(iq, """
             <iq id="0">
                 <subscribe xmlns='urn:xmpp:iot:concentrators' sourceId='MeteringTopology'/>
             </iq>""", defaults=['nodeAdded','nodeMovedUp','nodeAdded','nodeMovedDown','nodeMovedUp','parameters','nodeStatusChanged','nodeRemoved'])
       
-    def testSubscribeResponse():
+    def testSubscribeResponse(self):
         iq = self.Iq()
         stanza = iq['getAllDataSourcesResponse']
-        stanza['result'] = 'OK'        
+        stanza['result'] = 'OK'
+        
+        
+    def testGetAllNodes(self):
+        iq = self.Iq()
+        stanza = iq['getAllNodes']
+        stanza['sourceId'] = 'MeteringTopology'
+        stanza['lang'] = 'en'
+        self.check(iq, """
+            <iq id="0">
+                  <getAllNodes xmlns='urn:xmpp:iot:concentrators' sourceId='MeteringTopology' xml:lang='en'/>
+            </iq>""")
+            
+    def testGetAllNodesResponse(self):
+        iq = self.Iq()
+        stanza = iq['getAllNodesResponse']
+        stanza.add_node('Node1', 'Namespace.NodeType1', 'Node', 'WarningUnsigned',
+            False, True, True, True, 'Root')
+        stanza.add_node('Node2', 'Namespace.NodeType2', 'Node', 'None',
+            False, True, True, True, 'Root')
+            
+        stanza['result'] = 'OK'
+        
+        self.check(iq, """
+            <iq id="0">
+                  <getAllNodesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+                            <node nodeId='Node1' nodeType='Namespace.NodeType1' cacheType='Node' state='WarningUnsigned' hasChildren='false' 
+                                  isReadable='true' isControllable='true' hasCommands='true' parentId='Root'/>
+                            <node nodeId='Node2' nodeType='Namespace.NodeType2' cacheType='Node' state='None' hasChildren='false' 
+                                  isReadable='true' isControllable='true' hasCommands='true' parentId='Root'/>
+                            
+                        </getAllNodesResponse>
+            </iq>""")
+    
         
         
 

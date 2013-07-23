@@ -11,3 +11,4 @@
 from sleekxmpp.plugins.xep_0326.stanza.base import *
 from sleekxmpp.plugins.xep_0326.stanza.data_sources import *
 from sleekxmpp.plugins.xep_0326.stanza.capabilities import *
+from sleekxmpp.plugins.xep_0326.stanza.nodes import *

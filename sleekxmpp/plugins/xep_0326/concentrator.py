@@ -58,6 +58,15 @@ class XEP_0326(BasePlugin):
                 Callback('Unsubscribe',
                          StanzaPath('iq@type=set/unsubscribe'),
                          self._handle_data_source_unsubscribe))
+                         
+        self.xmpp.register_handler(
+                Callback('GetAllNodes',
+                         StanzaPath('iq@type=set/getAllNodes'),
+                         self._handle_get_all_nodes))
+        self.xmpp.register_handler(
+                Callback('GetNodeCommands',
+                         StanzaPath('iq@type=set/getNodeCommands'),
+                         self._handle_get_node_commands))
         
     
     
@@ -72,6 +81,8 @@ class XEP_0326(BasePlugin):
         self.xmpp.remove_handler('GetAllDataSources')
         self.xmpp.remove_handler('Subscribe')
         self.xmpp.remove_handler('Unsubscribe')
+        self.xmpp.remove_handler('GetAllNodes')
+        self.xmpp.remove_handler('GetNodeCommands')
         
 
     def _handle_get_capabilities(self, message):
@@ -85,4 +96,12 @@ class XEP_0326(BasePlugin):
     
     def _handle_data_source_unsubscribe(self, message):
         self.xmpp.event("dataSourceUnsubscribe", message)
+        
+    def _handle_get_all_nodes(self, message):
+        self.xmpp.event("getAllNodes", message)
+    
+    def _handle_get_node_commands(self, message):
+        self.xmpp.event("getNodeCommands", message)
+            
+        
     

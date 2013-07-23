@@ -3,7 +3,8 @@
     Copyright (C) 2012 Nathanael C. Fritz, Lance J.T. Stout
     This file is part of SleekXMPP.
     
-    See the file LICENSE for copying permissio
+    See the file LICENSE for copying permission
+    
     
     Author: Klaudiusz Staniek (kstaniek@gmail.com)
 """
@@ -11,6 +12,8 @@
 
 from sleekxmpp.xmlstream import ElementBase, ET, register_stanza_plugin
 from sleekxmpp.plugins import xep_0082   #for timestamp
+
+from sleekxmpp import Iq, Message
 
 import datetime as dt
 
@@ -188,14 +191,21 @@ class NodeInformation(ConcentratorBase):
     name = 'node'
     plugin_attrib = 'node'
     plugin_multi_attrib = 'nodes'
-    interfaces = set(['id','displayName','nodeType','localId','logId','cacheType','state',
+    interfaces = set(['nodeId','displayName','nodeType','localId','logId','cacheType','state',
                     'hasChildren','childrenOrdered','isReadable','isControllable',
                     'hasCommands', 'parentId','parentCacheType', 'lastChanged'])
     
-    bool_attribs = set(['hasChildren','isReadable','isControllable','hasCommands'])
+    bool_attribs = set(['hasChildren','childrenOrdered', 'isReadable','isControllable','hasCommands'])
+    
+    def setup(self, xml=None):
+        super().setup(xml)
+        self._set_attr('nodeId','')
+        self._set_attr('state','')
+        self._set_attr('hasChildren', 'false')
+        
     
     def __getitem__(self, attrib):
-        if attrib in self.bool_atribs:
+        if attrib in self.bool_attribs:
             value = self._get_attr(attrib, 'false')
             return value.lower() in ('1', 'true')
         
@@ -289,11 +299,11 @@ class GetNodesResponse(ConcentratorResponseBase):
     This command returns basic information about multiple nodes in the concentrator. 
     
     <getNodesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
-          <node id='Node1' nodeType='Namespace.NodeType1' cacheType='Node' state='WarningUnsigned' hasChildren='false' isReadable='true' 
+          <node nodeId='Node1' nodeType='Namespace.NodeType1' cacheType='Node' state='WarningUnsigned' hasChildren='false' isReadable='true' 
                 isControllable='true' hasCommands='true' parentId='Root' lastChanged='2013-03-19T17:58:01'/>
-          <node id='Node2' nodeType='Namespace.NodeType2' cacheType='Node' state='None' hasChildren='false' isReadable='true' 
+          <node nodeId='Node2' nodeType='Namespace.NodeType2' cacheType='Node' state='None' hasChildren='false' isReadable='true' 
                 isControllable='true' hasCommands='true' parentId='Root' lastChanged='2013-03-19T17:58:01'/>
-          <node id='Node3' nodeType='Namespace.NodeType3' cacheType='Node' state='None' hasChildren='false' isReadable='true' 
+          <node nodeId='Node3' nodeType='Namespace.NodeType3' cacheType='Node' state='None' hasChildren='false' isReadable='true' 
                 isControllable='true' hasCommands='true' parentId='Root' lastChanged='2013-03-19T17:58:01'/>
       </getNodesResponse>
     
@@ -311,20 +321,28 @@ class GetNodesResponse(ConcentratorResponseBase):
         self._nodes = set([item[0:2] for item in self['nodes']])
     
                 
-    def add_node(self, id, nodeType, cacheType, state, hasChildren, isReadable,
-                isControllable, hasCommands, parentId, lastChanged):
-        if (id) not in self._nodes:
-            self._nodes.add(id)
+    def add_node(self, nodeId, state, hasChildren, 
+                displayName=None, nodeType=None, localId=None, logId=None,
+                cacheType=None, childrenOrdered=False, isReadable=False, isControllable=False,
+                hasCommands=False, parentId=None, parentCacheType=None, lastChanged=None):
+        
+        if (nodeId) not in self._nodes:
+            self._nodes.add(nodeId)
             node = NodeInformation(parent=self)
-            node['id'] = id
-            node['nodeType'] = nodeType
-            node['cacheType'] = cacheType
+            node['nodeId'] = nodeId
             node['state'] = state
             node['hasChildren'] = hasChildren
+            node['displayName'] = displayName
+            node['nodeType'] = nodeType
+            node['localId'] = localId
+            node['logId'] = logId
+            node['cacheType'] = cacheType
+            node['childrenOrdered'] = childrenOrdered
             node['isReadable'] = isReadable
             node['isControllable'] = isControllable
             node['hasCommands'] = hasCommands
             node['parendId'] = parentId
+            node['parentCacheType'] = parentCacheType
             node['lastChanged'] = lastChanged
             
             self.iterables.append(node)
@@ -342,10 +360,164 @@ class GetNodesResponse(ConcentratorResponseBase):
     
      
 
+class GetAllNodes(ConcentratorBase):
+    """
+    This command returns basic information about all nodes in source. 
+    
+    <getAllNodes xmlns='urn:xmpp:iot:concentrators' sourceId='MeteringTopology' xml:lang='en'/>
+    
+    """
+
+    name = 'getAllNodes'
+    plugin_attrib = 'getAllNodes'
+    interfaces = set(['sourceId'])
+    
+
+class GetAllNodesResponse(GetNodesResponse):
+    """
+    <getAllNodesResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+              <node nodeId='Node1' nodeType='Namespace.NodeType1' cacheType='Node' state='WarningUnsigned' hasChildren='false' 
+                    isReadable='true' isControllable='true' hasCommands='true' parentId='Root'/>
+              <node nodeId='Node2' nodeType='Namespace.NodeType2' cacheType='Node' state='None' hasChildren='false' 
+                    isReadable='true' isControllable='true' hasCommands='true' parentId='Root'/>
+              <node nodeId='Node3' nodeType='Namespace.NodeType3' cacheType='Node' state='None' hasChildren='false' 
+                    isReadable='true' isControllable='true' hasCommands='true' parentId='Root'/>
+              <node nodeId='Root' nodeType='Namespace.Root' cacheType='Node' state='None' hasChildren='true' 
+                    isReadable='false' isControllable='false' hasCommands='true'/>
+          </getAllNodesResponse>
+    """
+    name = 'getAllNodesResponse'
+    plugin_attrib = 'getAllNodesResponse'
+    
+    
+class Command(ConcentratorBase):
+    name = 'command'
+    plugin_attrib = 'command'
+    plugin_multi_attrib = 'commands'
+    interfaces = set(['command','name','type',
+                    'sortCategory','sortKey',
+                    'confirmationString',
+                    'failureString',
+                    'successString'])
+    
+    def setup(self, xml=None):
+        super().setup(xml)
+        self._set_attr('command','')
+        self._set_attr('name','')
+        self._set_attr('type', '')
+
+class GetNodeCommands(ConcentratorBase):
+    """
+    This command requests the list of available commands. 
+    
+    <getNodeCommands xmlns='urn:xmpp:iot:concentrators' sourceId='MeteringGroups' nodeId='Apartment 1-1' xml:lang='en'/>
+    
+    """
+
+    name = 'getNodeCommands'
+    plugin_attrib = 'getNodeCommands'
+    interfaces = set(['sourceId','nodeId'])
+ 
+class GetNodeCommandsResponse(ConcentratorResponseBase):
+    """
+    This command returns the list of available commands.. 
+    
+    <getNodeCommandsResponse xmlns='urn:xmpp:iot:concentrators' result='OK'>
+              <command command='knockDoor' name='Knock on door' type='Simple' 
+                       confirmationString='Are you sure you want to knock on the door?'
+                       failureString='Unable to knock on the door.'
+                       successString='Door knocked.'/>
+              <command command='scheduleWakeupCall' name='Schedule wakeup call' type='Parameterized' 
+                       failureString='Unable to schedule the wakeup call.'
+                       successString='Wakeup call scheduled.'/>
+              <command command='searchEvents' name='Search events...' type='Query' 
+                       failureString='Unable to search for events.'
+                       successString='Search for events started...'/>
+          </getNodeCommandsResponse>
+    
+    """
+
+    name = 'getNodeCommandsResponse'
+    plugin_attrib = 'getNodeCommandsResponse'
+    
+    # Cache items
+    _commands = set()
+        
+    def setup(self, xml=None):
+        super().setup(xml)
+        # for keeping information about the id's to avoid duplication
+        self._commands = set([item[0:2] for item in self['commands']])
+    
+                
+    def add_command(self, command, name, type, 
+                sortCategory=None,
+                sortKey=None,
+                confirmationString=None,
+                failureString=None,
+                successString=None):
+        """
+        command             required    ID of the command. Used to identify the command.
+        name                required    A string that can be presented to an end-user. Should be localized 
+                                        if the request contained a language preference.
+        type                required    If the command is 'Simple' or 'Parameterized'.
+        sortCategory        optional    Should be used (if available) by clients to sort available node commands
+                                        before presenting them to an end-user. Commands should be sorted by Sort Category,
+                                        Sort Key and lastly by Name.
+        sortKey             optional    Should be used (if available) by clients to sort available node commands
+                                        before presenting them to an end-user. Commands should be sorted by Sort Category,
+                                        Sort Key and lastly by Name.
+        confirmationString  optional    Should presented to clients (if available) before letting an end-user execute the command.
+                                        A delete command might have a confirmationString saying 'Are you sure you want to delete
+                                        the current item?' The confirmation string should be presented as a Yes/No[/Cancel] dialog.
+        failureString       optional    Could be presented to end-users (if available) if a command fails. It provides the 
+                                        client with an optionally localized string giving some context to the error message.
+                                        A delete command might have a failureString saying 'Unable to delete the current item.'.
+                                        The client could then add additional error information, if available, for instance from the 
+                                        response code.
+        successString       optional    Could be presented to end-users (if available) if a command is successfully executed.
+                                        It provides the client with an optionally localized string giving some context to the message. 
+                                        A delete command might have a successString saying 'Current item successfully deleted.'.
+        """
+    
+        
+        if (command) not in self._commands:
+            self._commands.add(command)
+            command = Command(parent=self)
+            command['command'] = command
+            commnad['name'] = name
+            command['type'] = type
+            command['sortCategory'] = sortCategory
+            command['confirmationString'] = confirmationString
+            command['failureString'] = failureString
+            command['successString'] = successString
+            
+            self.iterables.append(node)
+            return True
+        return False
+      
+    def get_commands(self):
+        """ Return all nodes """
+        commands = set()
+        for command in self['substanzas']:
+            if isinstance(command, Command):
+                commands.add((command['command'], 
+                                command['name'],
+                                command['type']))
+        return commands
+    
+            
+
+
+
 
 register_stanza_plugin(ContainsNodesResponse, Value, iterable=True)      
 register_stanza_plugin(ContainsNodes, NodeReference, iterable=True)
+register_stanza_plugin(GetNodeCommandsResponse, Command, iterable=True)
 
+register_stanza_plugin(Iq, GetAllNodes)
+register_stanza_plugin(Iq, GetAllNodesResponse)
+register_stanza_plugin(Iq, GetNodeCommands)
+register_stanza_plugin(Iq, GetNodeCommandsResponse)
 
 
 
@@ -396,17 +568,18 @@ if __name__ == '__main__':
     print("================== Node ================")
     
     stanza = NodeInformation()
-    stanza['id'] = 'Node1'
-    stanza['nodeType'] = 'Namespace.NodeType1'
-    stanza['cacheType'] = 'Node'
+    stanza['nodeId'] = 'Node1'
     stanza['state'] = 'WarningUnsigned'
     stanza['hasChildred'] = 'false'
-    stanza['isControllable'] = 'true'
-    stanza['hasCommands'] = 'true'
-    stanza['parentId'] = 'Root'
-    stanza['lastChanged'] = '2013-03-19T17:58:01'
-    print("%s" % stanza)
     
+    #stanza['nodeType'] = 'Namespace.NodeType1'
+    #stanza['cacheType'] = 'Node'
+    #stanza['isControllable'] = 'true'
+    #stanza['hasCommands'] = 'true'
+    #stanza['parentId'] = 'Root'
+    #stanza['lastChanged'] = '2013-03-19T17:58:01'
+    print("%s" % stanza)
+
     print("================== GetNode ================")
     
     stanza = GetNode()
@@ -440,16 +613,38 @@ if __name__ == '__main__':
     print("%s" % stanza)
    
     
-    print("================== GetNodeResponse ================")
+    print("================== GetNodesResponse ================")
     
     stanza = GetNodesResponse()
-    stanza.add_node('Node1', 'Namespace.NodeType1', 'Node', 'WarningUnsigned',
-        False, True, True, True, 'Root', '2013-03-19T17:58:01')
-    stanza.add_node('Node2', 'Namespace.NodeType2', 'Node', 'WarningUnsigned',
-        False, True, True, True, 'Root', '2013-03-19T17:58:01')
+    stanza.add_node('Node1', 'WarningUnsigned', False)
+    stanza.add_node('Node2', 'OK', False)
+    
+    #stanza.add_node('Node1', 'Namespace.NodeType1', 'Node', 'WarningUnsigned',
+    #    False, True, True, True, 'Root', '2013-03-19T17:58:01')
+    #stanza.add_node('Node2', 'Namespace.NodeType2', 'Node', 'WarningUnsigned',
+    #    False, True, True, True, 'Root', '2013-03-19T17:58:01')
     a = "%s" % stanza
     #print("%s" % stanza)
     print("%s" % a.replace('><', '>\n<'))
+    
+    print("================== GetAllNodes ================")
+    stanza = GetAllNodes()
+    stanza['sourceId'] = "All"
+    a = "%s" % stanza
+    #print("%s" % stanza)
+    print("%s" % a.replace('><', '>\n<'))
+    
+    print("================== GetAllNodesResponse ================")
+    
+    stanza = GetAllNodesResponse()
+    stanza.add_node('Node1', 'WarningUnsigned', False)
+    
+    #stanza.add_node('Node2', 'Namespace.NodeType2', 'Node', 'WarningUnsigned',
+    #    False, True, True, True, 'Root', '2013-03-19T17:58:01')
+    a = "%s" % stanza
+    #print("%s" % stanza)
+    print("%s" % a.replace('><', '>\n<'))
+    
     
     
     
