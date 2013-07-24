@@ -15,6 +15,7 @@ from sleekxmpp.stanza import Message, Iq
 from sleekxmpp.exceptions import XMPPError
 from sleekxmpp.xmlstream.handler import Callback
 from sleekxmpp.xmlstream.matcher import StanzaPath
+from sleekxmpp.xmlstream.stanzabase import ElementBase
 from sleekxmpp.xmlstream import register_stanza_plugin
 from sleekxmpp.plugins import BasePlugin
 
@@ -61,12 +62,17 @@ class XEP_0326(BasePlugin):
                          
         self.xmpp.register_handler(
                 Callback('GetAllNodes',
-                         StanzaPath('iq@type=set/getAllNodes'),
+                         StanzaPath('iq@type=get/getAllNodes'),
                          self._handle_get_all_nodes))
         self.xmpp.register_handler(
                 Callback('GetNodeCommands',
-                         StanzaPath('iq@type=set/getNodeCommands'),
+                         StanzaPath('iq@type=get/getNodeCommands'),
                          self._handle_get_node_commands))
+        
+        #self.xmpp.register_handler(
+        #        Callback('unimplemented',
+        #                 StanzaPath('iq@type=get//'),
+        #                 self._handle_unimplemented))
         
     
     
@@ -102,6 +108,28 @@ class XEP_0326(BasePlugin):
     
     def _handle_get_node_commands(self, message):
         self.xmpp.event("getNodeCommands", message)
+    
+    def _handle_unimplemented(self, message):
+        print('unimplemented')
+        message.reply(clear=True)
+        message['type'] = 'error'
+        print(message)
+        print(message.values)
+        message.send()
+        
+        #payload=message.get_payload()
+        #print('Payload {0}'.format(payload))
+        #print(type(payload[0]))
+        #element_name = payload[0].tag
+        #print(element_name)
+        
+        #reply = ElementBase()
+        #reply.name = 'dupa'
+        #print("Reply {0}".format(reply))
+        
+        #print(message)
+        
+        #   message.send()
             
         
     
